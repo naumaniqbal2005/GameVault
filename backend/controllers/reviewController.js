@@ -1,12 +1,18 @@
+// Import Review model (handles DB operations for Reviews table)
 const Review = require('../models/Review');
+// Import validation helpers from express-validator
 const { body, validationResult } = require('express-validator');
 
-// Generate a simple review ID (in production, use proper ID generation)
+// Utility: generate a random ReviewID
+// NOTE: In production you'd use auto-increment IDs or GUIDs instead
 const generateReviewId = () => Math.floor(Math.random() * 1000000) + 1;
 
-// Create a review for a game
+// ---------------------- Review Routes ----------------------
+
+// Controller: Create a review for a game
 const createReview = async (req, res) => {
     try {
+        // Validate input
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
@@ -14,7 +20,7 @@ const createReview = async (req, res) => {
 
         const { userId, gameId, rentalId, rating, reviewText } = req.body;
 
-        // Check if user can review this game (must have rented and returned it)
+        // Check if user is allowed to review (must have rented and returned the game)
         const canReview = await Review.canUserReview(userId, gameId);
         if (!canReview) {
             return res.status(403).json({ 
@@ -22,6 +28,7 @@ const createReview = async (req, res) => {
             });
         }
 
+        // Build review object
         const reviewData = {
             ReviewID: generateReviewId(),
             UserID: userId,
@@ -31,6 +38,7 @@ const createReview = async (req, res) => {
             ReviewText: reviewText
         };
 
+        // Insert into DB via model
         const newReview = await Review.create(reviewData);
         res.status(201).json({ 
             message: 'Review created successfully', 
@@ -42,14 +50,14 @@ const createReview = async (req, res) => {
     }
 };
 
-// Get reviews for a game
+// Controller: Get all reviews for a specific game
 const getGameReviews = async (req, res) => {
     try {
         const { gameId } = req.params;
         
         const reviews = await Review.findByGameId(gameId);
         
-        // Get average rating
+        // Also fetch average rating and review count
         const ratingInfo = await Review.getAverageRating(gameId);
         
         res.json({
@@ -63,7 +71,7 @@ const getGameReviews = async (req, res) => {
     }
 };
 
-// Get user's reviews
+// Controller: Get all reviews written by a specific user
 const getUserReviews = async (req, res) => {
     try {
         const { userId } = req.params;
@@ -76,7 +84,7 @@ const getUserReviews = async (req, res) => {
     }
 };
 
-// Get review by ID
+// Controller: Get a single review by ID
 const getReviewById = async (req, res) => {
     try {
         const { reviewId } = req.params;
@@ -93,9 +101,10 @@ const getReviewById = async (req, res) => {
     }
 };
 
-// Update a review
+// Controller: Update an existing review
 const updateReview = async (req, res) => {
     try {
+        // Validate input
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
@@ -110,16 +119,19 @@ const updateReview = async (req, res) => {
             return res.status(404).json({ message: 'Review not found' });
         }
 
+        // Build update object
         const reviewData = {
             Rating: rating,
             ReviewText: reviewText
         };
 
+        // Perform update
         const updated = await Review.update(reviewId, reviewData);
         if (!updated) {
             return res.status(400).json({ message: 'Failed to update review' });
         }
 
+        // Fetch updated review to return
         const updatedReview = await Review.findById(reviewId);
         res.json({ 
             message: 'Review updated successfully', 
@@ -131,7 +143,7 @@ const updateReview = async (req, res) => {
     }
 };
 
-// Delete a review
+// Controller: Delete a review
 const deleteReview = async (req, res) => {
     try {
         const { reviewId } = req.params;
@@ -142,6 +154,7 @@ const deleteReview = async (req, res) => {
             return res.status(404).json({ message: 'Review not found' });
         }
 
+        // Perform deletion
         const deleted = await Review.delete(reviewId);
         if (!deleted) {
             return res.status(400).json({ message: 'Failed to delete review' });
@@ -154,7 +167,7 @@ const deleteReview = async (req, res) => {
     }
 };
 
-// Get all reviews (admin function)
+// Controller: Get all reviews (admin-only)
 const getAllReviews = async (req, res) => {
     try {
         const reviews = await Review.getAll();
@@ -165,7 +178,7 @@ const getAllReviews = async (req, res) => {
     }
 };
 
-// Check if user can review a game
+// Controller: Check if user can review a game
 const checkCanReview = async (req, res) => {
     try {
         const { userId, gameId } = req.params;
@@ -178,7 +191,9 @@ const checkCanReview = async (req, res) => {
     }
 };
 
-// Validation middleware
+// ---------------------- Validation Middleware ----------------------
+
+// Validation for creating a review
 const validateCreateReview = [
     body('userId').isInt({ min: 1 }).withMessage('Valid user ID is required'),
     body('gameId').isInt({ min: 1 }).withMessage('Valid game ID is required'),
@@ -187,11 +202,13 @@ const validateCreateReview = [
     body('reviewText').optional().isLength({ max: 1000 }).withMessage('Review text must be less than 1000 characters')
 ];
 
+// Validation for updating a review
 const validateUpdateReview = [
     body('rating').isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5'),
     body('reviewText').optional().isLength({ max: 1000 }).withMessage('Review text must be less than 1000 characters')
 ];
 
+// Export all controller functions and validation middleware
 module.exports = {
     createReview,
     getGameReviews,
