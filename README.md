@@ -43,46 +43,55 @@ A full-featured game rental and purchase management system powered by Node.js, E
    - Enable SQL Server Authentication
 
 2. **Environment Configuration**
-
+```bash
    cd backend
    cp .env.example .env
-
-   Edit .env with your database credentials:
-
+```
+   Edit `.env` with your database credentials:
+```
    DB_SERVER=localhost\\SQLEXPRESS
    DB_NAME=GameVault
    DB_USER=your_username
    DB_PASSWORD=your_password
+```
 
 3. **Install Dependencies**
-
+```bash
    cd backend
    npm install
+```
 
 4. **Start Backend Server**
-
+```bash
    npm start
-   or for development
+   # or for development
    npm run server
+```
 
 5. **Start Frontend**
-
+```bash
    cd frontend
    npm install
    npm start
+```
 
 ## 📡 API Documentation
 
 ### Base URL
+```
 http://localhost:5000/api
+```
 
 ### Authentication Endpoints
+```
 POST /api/users/register     - Register a new user
 POST /api/users/login        - Log in to an existing account
 GET  /api/users/profile/:id  - Fetch user profile
 PUT  /api/users/profile/:id  - Update user profile
+```
 
 ### Game Management
+```
 GET    /api/games              - Fetch all games (supports filters)
 GET    /api/games/:id          - Fetch a single game by ID
 POST   /api/games              - Add a new game (admin)
@@ -90,8 +99,10 @@ PUT    /api/games/:id          - Update game details (admin)
 DELETE /api/games/:id          - Remove a game (admin)
 GET    /api/games/:id/physical-copies  - List available physical copies
 GET    /api/games/:id/digital-copies   - List available digital copies
+```
 
 ### Rental System
+```
 POST   /api/rentals/rent               - Rent a digital game
 PUT    /api/rentals/return/:id         - Return a rented game
 DELETE /api/rentals/:id                - Remove rental record (admin)
@@ -100,34 +111,43 @@ GET    /api/rentals/user/:id/active    - Get currently active rentals
 GET    /api/rentals/stats              - Get rental statistics overview (admin)
 POST   /api/rentals/waitlist/join      - Join the digital waitlist
 GET    /api/rentals/waitlist/user/:id  - View user waitlist entries
+```
 
 ### Purchase System
+```
 POST   /api/purchases/purchase        - Purchase a physical game
 GET    /api/purchases/user/:id        - Get purchase history for a user
 GET    /api/purchases/:id             - Fetch a specific purchase
 POST   /api/purchases/waitlist/join   - Join the physical waitlist
+```
 
 ### Reviews
+```
 POST   /api/reviews                            - Submit a review
 GET    /api/reviews/game/:id                   - Get all reviews for a game
 GET    /api/reviews/user/:id                   - Get all reviews by a user
 PUT    /api/reviews/review/:id                 - Edit a review
 DELETE /api/reviews/review/:id                 - Delete a review
 GET    /api/reviews/can-review/:userId/:gameId - Check review eligibility
+```
 
 ### Categories
+```
 GET    /api/categories      - List all categories
 GET    /api/categories/:id  - Get a specific category
 POST   /api/categories      - Create a category (admin)
 PUT    /api/categories/:id  - Update a category (admin)
 DELETE /api/categories/:id  - Delete a category (admin)
+```
 
 ### Memberships
+```
 GET    /api/memberships/tiers              - View all membership tiers
 GET    /api/memberships/user/:id           - Get a user's active membership
 GET    /api/memberships/user/:id/history   - View membership history
 POST   /api/memberships/user               - Assign a membership to a user
 PUT    /api/memberships/:id/status         - Update membership status
+```
 
 ## 📊 Database Schema
 
@@ -155,12 +175,15 @@ PUT    /api/memberships/:id/status         - Update membership status
 ## 🔧 Development
 
 ### Scripts
-npm start          - Start production server
-npm run server     - Start development server with nodemon
-npm run client     - Start frontend
-npm run dev        - Start both backend and frontend concurrently
+```bash
+npm start          # Start production server
+npm run server     # Start development server with nodemon
+npm run client     # Start frontend
+npm run dev        # Start both backend and frontend concurrently
+```
 
 ### Project Structure
+```
 GameVault/
 ├── backend/
 │   ├── config/
@@ -198,12 +221,14 @@ GameVault/
 │   ├── public/
 │   └── package.json
 └── gamevault-db.sql
+```
 
 ## 🧪 Testing with Postman
 
 ### Example Requests
 
 #### Register User
+```http
 POST /api/users/register
 Content-Type: application/json
 
@@ -211,8 +236,10 @@ Content-Type: application/json
     "fullName": "John Doe",
     "email": "john@example.com"
 }
+```
 
 #### Rent a Game
+```http
 POST /api/rentals/rent
 Content-Type: application/json
 
@@ -221,11 +248,15 @@ Content-Type: application/json
     "copyId": 2,
     "rentalDays": 7
 }
+```
 
 #### Get Games with Filters
+```http
 GET /api/games?category=1&platform=PlayStation&search=Zelda
+```
 
 #### Create Review
+```http
 POST /api/reviews
 Content-Type: application/json
 
@@ -236,6 +267,7 @@ Content-Type: application/json
     "rating": 5,
     "reviewText": "Amazing game!"
 }
+```
 
 ## 🔒 Security Considerations
 
@@ -243,7 +275,7 @@ Content-Type: application/json
 - **SQL Injection Prevention**: Parameterized queries used throughout
 - **Error Handling**: Error responses never expose sensitive server details
 - **CORS**: Properly configured for frontend integration
-- **Environment Variables**: All sensitive config stored in .env
+- **Environment Variables**: All sensitive config stored in `.env`
 
 ## 📝 Important Notes
 
