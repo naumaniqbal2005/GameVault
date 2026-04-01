@@ -1,6 +1,6 @@
 # GameVault - Game Rental & Purchase System
 
-A full-featured game rental and purchase management system powered by Node.js, Express, and SQL Server.
+A complete game rental and purchase management platform built using Node.js, Express, and SQL Server.
 
 ## 🎮 Features
 
@@ -35,7 +35,7 @@ A full-featured game rental and purchase management system powered by Node.js, E
 - SQL Server (2019+)
 - npm
 
-### Setup Steps
+### Steps for Setup
 
 1. **Configure SQL Server**
    - Make sure SQL Server is running
