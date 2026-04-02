@@ -1,14 +1,20 @@
+// Import models for Purchases, Games, and Waitlists
 const Purchase = require('../models/Purchase');
 const Game = require('../models/Game');
 const Waitlist = require('../models/Waitlist');
+// Import validation helpers from express-validator
 const { body, validationResult } = require('express-validator');
 
-// Generate a simple purchase ID (in production, use proper ID generation)
+// Utility: generate a random PurchaseID
+// NOTE: In production you'd use auto-increment IDs or GUIDs instead
 const generatePurchaseId = () => Math.floor(Math.random() * 1000000) + 1;
 
-// Buy a physical copy
+// ---------------------- Purchase Routes ----------------------
+
+// Controller: Buy a physical copy of a game
 const purchaseGame = async (req, res) => {
     try {
+        // Validate input
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
@@ -22,9 +28,9 @@ const purchaseGame = async (req, res) => {
             return res.status(400).json({ message: 'Physical copy not available' });
         }
 
-        const game = copyInfo[0];
+        const game = copyInfo[0]; // Get game details for pricing
 
-        // Create purchase
+        // Build purchase object
         const purchaseData = {
             PurchaseID: generatePurchaseId(),
             UserID: userId,
@@ -33,11 +39,12 @@ const purchaseGame = async (req, res) => {
             PurchaseDate: new Date()
         };
 
+        // Insert into DB via model
         const newPurchase = await Purchase.create(purchaseData);
         res.status(201).json({ 
             message: 'Game purchased successfully', 
             purchase: newPurchase,
-            price: game.PhysicalPrice
+            price: game.PhysicalPrice // Include price in response
         });
     } catch (error) {
         console.error('Purchase game error:', error);
@@ -45,7 +52,7 @@ const purchaseGame = async (req, res) => {
     }
 };
 
-// Get user's purchase history
+// Controller: Get purchase history for a specific user
 const getUserPurchases = async (req, res) => {
     try {
         const { userId } = req.params;
@@ -58,7 +65,7 @@ const getUserPurchases = async (req, res) => {
     }
 };
 
-// Get all purchases (admin function)
+// Controller: Get all purchases (admin-only)
 const getAllPurchases = async (req, res) => {
     try {
         const purchases = await Purchase.getAll();
@@ -69,7 +76,7 @@ const getAllPurchases = async (req, res) => {
     }
 };
 
-// Get purchase by ID
+// Controller: Get purchase details by ID
 const getPurchaseById = async (req, res) => {
     try {
         const { purchaseId } = req.params;
@@ -86,9 +93,12 @@ const getPurchaseById = async (req, res) => {
     }
 };
 
-// Add user to physical waitlist
+// ---------------------- Physical Waitlist Routes ----------------------
+
+// Controller: Add user to physical waitlist for a game
 const joinPhysicalWaitlist = async (req, res) => {
     try {
+        // Validate input
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
@@ -96,19 +106,21 @@ const joinPhysicalWaitlist = async (req, res) => {
 
         const { userId, gameId } = req.body;
 
-        // Check if user is already on waitlist
+        // Check if user is already on waitlist for this game
         const alreadyOnWaitlist = await Waitlist.isUserOnPhysicalWaitlist(userId, gameId);
         if (alreadyOnWaitlist) {
             return res.status(400).json({ message: 'You are already on the waitlist for this game' });
         }
 
+        // Build waitlist object
         const waitlistData = {
-            WaitlistID: generatePurchaseId(),
+            WaitlistID: generatePurchaseId(), // Reuse ID generator
             UserID: userId,
             GameID: gameId,
             RequestTime: new Date()
         };
 
+        // Insert into DB via model
         await Waitlist.addToPhysicalWaitlist(waitlistData);
         res.status(201).json({ message: 'Added to physical waitlist successfully' });
     } catch (error) {
@@ -117,7 +129,7 @@ const joinPhysicalWaitlist = async (req, res) => {
     }
 };
 
-// Get user's physical waitlist
+// Controller: Get physical waitlist for a specific user
 const getUserPhysicalWaitlist = async (req, res) => {
     try {
         const { userId } = req.params;
@@ -130,7 +142,7 @@ const getUserPhysicalWaitlist = async (req, res) => {
     }
 };
 
-// Get game's physical waitlist (admin function)
+// Controller: Get physical waitlist for a specific game (admin-only)
 const getGamePhysicalWaitlist = async (req, res) => {
     try {
         const { gameId } = req.params;
@@ -143,18 +155,22 @@ const getGamePhysicalWaitlist = async (req, res) => {
     }
 };
 
-// Validation middleware
+// ---------------------- Validation Middleware ----------------------
+
+// Validation for purchasing a game
 const validatePurchaseGame = [
     body('userId').isInt({ min: 1 }).withMessage('Valid user ID is required'),
     body('copyId').isInt({ min: 1 }).withMessage('Valid copy ID is required'),
     body('adminId').isInt({ min: 1 }).withMessage('Valid admin ID is required')
 ];
 
+// Validation for joining physical waitlist
 const validateJoinPhysicalWaitlist = [
     body('userId').isInt({ min: 1 }).withMessage('Valid user ID is required'),
     body('gameId').isInt({ min: 1 }).withMessage('Valid game ID is required')
 ];
 
+// Export all controller functions and validation middleware
 module.exports = {
     purchaseGame,
     getUserPurchases,

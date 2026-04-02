@@ -1,12 +1,18 @@
+// Import User model (handles DB operations for Users table)
 const User = require('../models/User');
+// Import validation helpers from express-validator
 const { body, validationResult } = require('express-validator');
 
-// Generate a simple user ID (in production, use proper ID generation)
+// Utility: generate a random UserID
+// NOTE: In production you'd use auto-increment IDs or GUIDs instead
 const generateUserId = () => Math.floor(Math.random() * 1000000) + 1;
 
-// User registration
+// ---------------------- User Registration ----------------------
+
+// Controller: Register a new user
 const register = async (req, res) => {
     try {
+        // Validate input
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
@@ -14,12 +20,13 @@ const register = async (req, res) => {
 
         const { fullName, email } = req.body;
 
-        // Check if user already exists
+        // Check if user already exists by email
         const existingUser = await User.findByEmail(email);
         if (existingUser) {
             return res.status(400).json({ message: 'User with this email already exists' });
         }
 
+        // Build user object
         const userData = {
             UserID: generateUserId(),
             FullName: fullName,
@@ -27,6 +34,7 @@ const register = async (req, res) => {
             AccountStatus: 'Active'
         };
 
+        // Insert into DB via model
         const newUser = await User.create(userData);
         res.status(201).json({ 
             message: 'User registered successfully', 
@@ -38,9 +46,13 @@ const register = async (req, res) => {
     }
 };
 
-// User login (simplified - in production, use proper authentication)
+// ---------------------- User Login ----------------------
+
+// Controller: Login user (simplified)
+// NOTE: In production, proper authentication (passwords, JWT) should be used
 const login = async (req, res) => {
     try {
+        // Validate input
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
@@ -48,11 +60,13 @@ const login = async (req, res) => {
 
         const { email } = req.body;
 
+        // Find user by email
         const user = await User.findByEmail(email);
         if (!user) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
+        // Check account status
         if (user.AccountStatus !== 'Active') {
             return res.status(401).json({ message: 'Account is not active' });
         }
@@ -73,7 +87,9 @@ const login = async (req, res) => {
     }
 };
 
-// Get user profile
+// ---------------------- User Profile ----------------------
+
+// Controller: Get user profile by ID
 const getProfile = async (req, res) => {
     try {
         const { userId } = req.params;
@@ -93,9 +109,10 @@ const getProfile = async (req, res) => {
     }
 };
 
-// Update user profile
+// Controller: Update user profile
 const updateProfile = async (req, res) => {
     try {
+        // Validate input
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
@@ -110,7 +127,7 @@ const updateProfile = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Check if email is being changed and if it's already taken
+        // If email is being changed, ensure it's not already taken
         if (email !== existingUser.Email) {
             const emailTaken = await User.findByEmail(email);
             if (emailTaken) {
@@ -118,17 +135,20 @@ const updateProfile = async (req, res) => {
             }
         }
 
+        // Build update object
         const userData = {
             FullName: fullName,
             Email: email,
             AccountStatus: accountStatus || existingUser.AccountStatus
         };
 
+        // Perform update
         const updated = await User.update(userId, userData);
         if (!updated) {
             return res.status(400).json({ message: 'Failed to update user' });
         }
 
+        // Fetch updated user to return
         const updatedUser = await User.findById(userId);
         res.json({ 
             message: 'Profile updated successfully', 
@@ -140,7 +160,9 @@ const updateProfile = async (req, res) => {
     }
 };
 
-// Get all users (admin function)
+// ---------------------- Admin Functions ----------------------
+
+// Controller: Get all users (admin-only)
 const getAllUsers = async (req, res) => {
     try {
         const users = await User.getAll();
@@ -154,7 +176,7 @@ const getAllUsers = async (req, res) => {
     }
 };
 
-// Delete user (admin function)
+// Controller: Delete a user (admin-only)
 const deleteUser = async (req, res) => {
     try {
         const { userId } = req.params;
@@ -171,22 +193,27 @@ const deleteUser = async (req, res) => {
     }
 };
 
-// Validation middleware
+// ---------------------- Validation Middleware ----------------------
+
+// Validation for registration
 const validateRegister = [
     body('fullName').trim().isLength({ min: 2, max: 50 }).withMessage('Full name must be between 2 and 50 characters'),
     body('email').isEmail().normalizeEmail().withMessage('Valid email is required')
 ];
 
+// Validation for login
 const validateLogin = [
     body('email').isEmail().normalizeEmail().withMessage('Valid email is required')
 ];
 
+// Validation for updating profile
 const validateUpdate = [
     body('fullName').optional().trim().isLength({ min: 2, max: 50 }).withMessage('Full name must be between 2 and 50 characters'),
     body('email').optional().isEmail().normalizeEmail().withMessage('Valid email is required'),
     body('accountStatus').optional().isIn(['Active', 'Inactive', 'Suspended']).withMessage('Invalid account status')
 ];
 
+// Export all controller functions and validation middleware
 module.exports = {
     register,
     login,

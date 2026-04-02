@@ -1,11 +1,16 @@
+// Import Membership models (handles DB operations for MembershipTiers and UserMemberships tables)
 const { MembershipTier, UserMembership } = require('../models/Membership');
+// Import validation helpers from express-validator
 const { body, validationResult } = require('express-validator');
 
-// Generate simple IDs (in production, use proper ID generation)
+// Utility: generate random IDs
+// NOTE: In production you'd use auto-increment IDs or GUIDs instead
 const generateTierId = () => Math.floor(Math.random() * 1000000) + 1;
 const generateMembershipId = () => Math.floor(Math.random() * 1000000) + 1;
 
-// Membership Tier routes
+// ---------------------- Membership Tier Routes ----------------------
+
+// Controller: Get all membership tiers
 const getAllTiers = async (req, res) => {
     try {
         const tiers = await MembershipTier.getAll();
@@ -16,6 +21,7 @@ const getAllTiers = async (req, res) => {
     }
 };
 
+// Controller: Get membership tier by ID
 const getTierById = async (req, res) => {
     try {
         const { tierId } = req.params;
@@ -32,15 +38,19 @@ const getTierById = async (req, res) => {
     }
 };
 
+// Controller: Create new membership tier (admin-only)
 const createTier = async (req, res) => {
     try {
+        // Validate input
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
         }
 
+        // Extract fields from request body
         const { tierName, discountPercent, description } = req.body;
 
+        // Build tier object with generated ID
         const tierData = {
             TierID: generateTierId(),
             TierName: tierName,
@@ -48,6 +58,7 @@ const createTier = async (req, res) => {
             Description: description
         };
 
+        // Insert into DB via model
         const newTier = await MembershipTier.create(tierData);
         res.status(201).json({ 
             message: 'Membership tier created successfully', 
@@ -59,7 +70,9 @@ const createTier = async (req, res) => {
     }
 };
 
-// User Membership routes
+// ---------------------- User Membership Routes ----------------------
+
+// Controller: Get current membership for a user
 const getUserMembership = async (req, res) => {
     try {
         const { userId } = req.params;
@@ -76,6 +89,7 @@ const getUserMembership = async (req, res) => {
     }
 };
 
+// Controller: Get full membership history for a user
 const getUserMembershipHistory = async (req, res) => {
     try {
         const { userId } = req.params;
@@ -88,8 +102,10 @@ const getUserMembershipHistory = async (req, res) => {
     }
 };
 
+// Controller: Create new membership for a user
 const createUserMembership = async (req, res) => {
     try {
+        // Validate input
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
@@ -97,12 +113,13 @@ const createUserMembership = async (req, res) => {
 
         const { userId, tierId, startDate, endDate } = req.body;
 
-        // Check if tier exists
+        // Check if tier exists before assigning
         const tier = await MembershipTier.findById(tierId);
         if (!tier) {
             return res.status(400).json({ message: 'Invalid membership tier' });
         }
 
+        // Build membership object with generated ID
         const membershipData = {
             MembershipID: generateMembershipId(),
             UserID: userId,
@@ -112,6 +129,7 @@ const createUserMembership = async (req, res) => {
             Status: 'Active'
         };
 
+        // Insert into DB via model
         const newMembership = await UserMembership.create(membershipData);
         res.status(201).json({ 
             message: 'User membership created successfully', 
@@ -123,6 +141,7 @@ const createUserMembership = async (req, res) => {
     }
 };
 
+// Controller: Update membership status (Active, Expired, Cancelled)
 const updateMembershipStatus = async (req, res) => {
     try {
         const { membershipId } = req.params;
@@ -140,6 +159,7 @@ const updateMembershipStatus = async (req, res) => {
     }
 };
 
+// Controller: Get all user memberships (admin-only)
 const getAllUserMemberships = async (req, res) => {
     try {
         const memberships = await UserMembership.getAll();
@@ -150,13 +170,16 @@ const getAllUserMemberships = async (req, res) => {
     }
 };
 
-// Validation middleware
+// ---------------------- Validation Middleware ----------------------
+
+// Validation for creating a membership tier
 const validateCreateTier = [
     body('tierName').trim().isLength({ min: 1, max: 30 }).withMessage('Tier name is required and must be less than 30 characters'),
     body('discountPercent').isFloat({ min: 0, max: 100 }).withMessage('Discount percent must be between 0 and 100'),
     body('description').optional().isLength({ max: 100 }).withMessage('Description must be less than 100 characters')
 ];
 
+// Validation for creating a user membership
 const validateCreateUserMembership = [
     body('userId').isInt({ min: 1 }).withMessage('Valid user ID is required'),
     body('tierId').isInt({ min: 1 }).withMessage('Valid tier ID is required'),
@@ -164,10 +187,12 @@ const validateCreateUserMembership = [
     body('endDate').isISO8601().withMessage('Valid end date is required')
 ];
 
+// Validation for updating membership status
 const validateUpdateStatus = [
     body('status').isIn(['Active', 'Expired', 'Cancelled']).withMessage('Status must be Active, Expired, or Cancelled')
 ];
 
+// Export all controller functions and validation middleware
 module.exports = {
     getAllTiers,
     getTierById,
