@@ -3,9 +3,38 @@
 -- ============================================================
 
 -- ============================================================
+-- MEMBERSHIP TIERS & USER MEMBERSHIPS
+-- ============================================================
+
+-- Stores each available membership plan and the savings rate it grants.
+-- DiscountPercent is applied to both physical and digital prices when
+-- a transaction is recorded.
+CREATE TABLE MembershipTiers (
+    TierID          INT PRIMARY KEY,
+    TierName        VARCHAR(30) NOT NULL,
+    DiscountPercent DECIMAL(5,2) NOT NULL,
+    Description     VARCHAR(100)
+);
+
+-- Ties a specific user to a membership plan for a defined period.
+-- Users with no record in this table receive no discount.
+-- Status: 'Active' | 'Expired' | 'Cancelled'
+CREATE TABLE UserMemberships (
+    MembershipID INT PRIMARY KEY,
+    UserID       INT NOT NULL,
+    TierID       INT NOT NULL,
+    StartDate    DATE NOT NULL,
+    EndDate      DATE NOT NULL,
+    Status       VARCHAR(20) DEFAULT 'Active',
+    FOREIGN KEY (UserID) REFERENCES Users(UserID),
+    FOREIGN KEY (TierID) REFERENCES MembershipTiers(TierID)
+);
+
+-- ============================================================
 -- USERS & ADMINS
 -- ============================================================
 
+-- Registered customers who can rent or purchase games.
 CREATE TABLE Users (
     UserID        INT PRIMARY KEY,
     FullName      VARCHAR(50)  NOT NULL,
@@ -13,6 +42,7 @@ CREATE TABLE Users (
     AccountStatus VARCHAR(20)
 );
 
+-- Staff accounts with elevated system privileges.
 CREATE TABLE Admins (
     AdminID      INT PRIMARY KEY,
     FullName     VARCHAR(50)  NOT NULL,
@@ -24,13 +54,15 @@ CREATE TABLE Admins (
 -- GAME CATALOG
 -- ============================================================
 
+-- Top-level groupings used to organize games.
 CREATE TABLE Categories (
     CategoryID   INT PRIMARY KEY,
     CategoryName VARCHAR(50) NOT NULL
 );
 
--- PhysicalPrice    = one-time buy-to-own (higher, permanent ownership)
--- DigitalRentalPrice = per-rental fee (lower, time-limited access)
+-- Master catalog of all available titles.
+-- PhysicalPrice      = buy-to-own cost (permanent ownership, higher price point)
+-- DigitalRentalPrice = per-session fee (time-limited access, lower price point)
 CREATE TABLE Games (
     GameID             INT PRIMARY KEY,
     GameTitle          VARCHAR(100) NOT NULL,
@@ -42,21 +74,49 @@ CREATE TABLE Games (
     FOREIGN KEY (CategoryID) REFERENCES Categories(CategoryID)
 );
 
--- Upcoming games not yet in the catalog.
--- GameID links back to Games once the title is officially released.
+-- Placeholder entries for titles not yet publicly released.
+-- GameID remains NULL until the game goes live and is added to Games.
 CREATE TABLE UpcomingCatalog (
     UpcomingID      INT PRIMARY KEY,
-    GameID          INT NULL,               -- Populated on release day
+    GameID          INT NULL,
     GameTitle       VARCHAR(100) NOT NULL,
     ExpectedRelease DATE,
     FOREIGN KEY (GameID) REFERENCES Games(GameID)
 );
 
 -- ============================================================
+-- WISHLIST & REVIEWS
+-- ============================================================
+
+-- Lets users express interest in unreleased titles from UpcomingCatalog.
+CREATE TABLE Wishlist (
+    WishlistID  INT PRIMARY KEY,
+    UserID      INT NOT NULL,
+    UpcomingID  INT NOT NULL,
+    RequestTime DATETIME,
+    FOREIGN KEY (UserID)     REFERENCES Users(UserID),
+    FOREIGN KEY (UpcomingID) REFERENCES UpcomingCatalog(UpcomingID)
+);
+
+-- Stores user-submitted ratings and feedback for games they have rented.
+-- RentalID acts as proof-of-play; a review cannot exist without a linked rental.
+CREATE TABLE Reviews (
+    ReviewID    INT PRIMARY KEY,
+    UserID      INT NOT NULL,
+    GameID      INT NOT NULL,
+    RentalID    INT NOT NULL,
+    Rating      INT,
+    ReviewText  TEXT,
+    FOREIGN KEY (UserID)   REFERENCES Users(UserID),
+    FOREIGN KEY (GameID)   REFERENCES Games(GameID),
+    FOREIGN KEY (RentalID) REFERENCES Rentals(RentalID)
+);
+
+-- ============================================================
 -- PHYSICAL COPIES  (Buy-to-Own)
 -- ============================================================
 
--- Each row = one physical disc/cartridge in inventory.
+-- Inventory record for every individual physical disc or cartridge.
 -- Availability: 'Available' | 'Sold'
 CREATE TABLE PhysicalCopies (
     CopyID        INT PRIMARY KEY,
@@ -66,8 +126,8 @@ CREATE TABLE PhysicalCopies (
     FOREIGN KEY (GameID) REFERENCES Games(GameID)
 );
 
--- Records the sale of a physical copy to a user, processed by an admin.
--- Payment details live in Transactions (PurchaseID FK).
+-- Captures the completed sale of a physical copy, linking buyer, item, and admin.
+-- The corresponding payment entry is stored in Transactions via PurchaseID.
 CREATE TABLE Purchases (
     PurchaseID   INT PRIMARY KEY,
     UserID       INT NOT NULL,
@@ -79,7 +139,7 @@ CREATE TABLE Purchases (
     FOREIGN KEY (AdminID) REFERENCES Admins(AdminID)
 );
 
--- Users queued to buy a physical copy that is currently out of stock.
+-- Holds users waiting to purchase a physical title that is currently sold out.
 CREATE TABLE PhysicalWaitlist (
     WaitlistID  INT PRIMARY KEY,
     UserID      INT NOT NULL,
@@ -93,8 +153,8 @@ CREATE TABLE PhysicalWaitlist (
 -- DIGITAL COPIES  (Rent-to-Play)
 -- ============================================================
 
--- Each row = one concurrent digital account slot.
--- Slot count per game implicitly defines how many users can rent simultaneously.
+-- Each row represents one concurrent rental slot for a digital title.
+-- The total slot count per game sets the simultaneous-user cap.
 -- Availability: 'Available' | 'Rented'
 CREATE TABLE DigitalCopies (
     CopyID      INT PRIMARY KEY,
@@ -103,19 +163,20 @@ CREATE TABLE DigitalCopies (
     FOREIGN KEY (GameID) REFERENCES Games(GameID)
 );
 
--- Records a digital rental. DateReturned is NULL until the user returns the game.
+-- Records every digital rental session. DateReturned stays NULL while
+-- the game is still checked out.
 CREATE TABLE Rentals (
     RentalID     INT PRIMARY KEY,
     UserID       INT NOT NULL,
-    CopyID       INT NOT NULL,             -- References a DigitalCopies slot
+    CopyID       INT NOT NULL,
     DateIssued   DATE,
     DateDue      DATE,
-    DateReturned DATE NULL,                -- NULL = still rented
+    DateReturned DATE NULL,
     FOREIGN KEY (UserID) REFERENCES Users(UserID),
     FOREIGN KEY (CopyID) REFERENCES DigitalCopies(CopyID)
 );
 
--- Users queued to rent a game that has no available digital slots.
+-- Queue for users waiting on a digital title with no free slots.
 CREATE TABLE DigitalWaitlist (
     WaitlistID  INT PRIMARY KEY,
     UserID      INT NOT NULL,
@@ -129,8 +190,8 @@ CREATE TABLE DigitalWaitlist (
 -- TRANSACTIONS & PENALTIES
 -- ============================================================
 
--- Unified payment record for both rentals and physical purchases.
--- RentalID is NULL for purchases; PurchaseID is NULL for rentals.
+-- Single payment ledger covering both rental fees and physical purchases.
+-- Exactly one of RentalID or PurchaseID will be populated per row; the other is NULL.
 CREATE TABLE Transactions (
     TransactionID   INT PRIMARY KEY,
     UserID          INT NOT NULL,
@@ -146,7 +207,7 @@ CREATE TABLE Transactions (
     FOREIGN KEY (AdminID)    REFERENCES Admins(AdminID)
 );
 
--- Fines charged to users (e.g. late returns, damaged copies).
+-- Financial penalties issued to users for late returns or damaged items.
 -- PaidStatus: 'Unpaid' | 'Paid'
 CREATE TABLE Penalties (
     PenaltyID     INT PRIMARY KEY,
@@ -160,50 +221,23 @@ CREATE TABLE Penalties (
 );
 
 -- ============================================================
--- WISHLIST & REVIEWS
--- ============================================================
-
--- Users express interest in upcoming (unreleased) games.
-CREATE TABLE Wishlist (
-    WishlistID  INT PRIMARY KEY,
-    UserID      INT NOT NULL,
-    UpcomingID  INT NOT NULL,
-    RequestTime DATETIME,
-    FOREIGN KEY (UserID)     REFERENCES Users(UserID),
-    FOREIGN KEY (UpcomingID) REFERENCES UpcomingCatalog(UpcomingID)
-);
-
--- Users may only review games they have an associated rental for,
--- preventing reviews from users who never played the game.
-CREATE TABLE Reviews (
-    ReviewID    INT PRIMARY KEY,
-    UserID      INT NOT NULL,
-    GameID      INT NOT NULL,
-    RentalID    INT NOT NULL,              -- Enforces: must have rented to review
-    Rating      INT,
-    ReviewText  TEXT,
-    FOREIGN KEY (UserID)   REFERENCES Users(UserID),
-    FOREIGN KEY (GameID)   REFERENCES Games(GameID),
-    FOREIGN KEY (RentalID) REFERENCES Rentals(RentalID)
-);
-
--- ============================================================
 -- NOTIFICATIONS
 -- ============================================================
 
--- Tracks alerts sent to users when a waitlisted game becomes
--- available or a wishlisted upcoming game officially releases.
+-- Delivers alerts when a waitlisted slot opens up or a wishlisted game releases.
+-- ReferenceID points to the originating row in PhysicalWaitlist, DigitalWaitlist,
+-- or Wishlist depending on NotificationType.
 -- Status: 'Pending' | 'Sent' | 'Claimed' | 'Expired'
 CREATE TABLE Notifications (
     NotificationID   INT PRIMARY KEY,
     UserID           INT NOT NULL,
-    NotificationType VARCHAR(30) NOT NULL,  -- e.g. 'WaitlistReady', 'GameReleased'
-    ReferenceID      INT NOT NULL,          -- ID of the Waitlist or Wishlist row that triggered this
+    NotificationType VARCHAR(30) NOT NULL,
+    ReferenceID      INT NOT NULL,
     Message          VARCHAR(255),
     Status           VARCHAR(20) DEFAULT 'Pending',
     CreatedAt        DATETIME,
-    SentAt           DATETIME NULL,         -- NULL until actually dispatched
-    ExpiresAt        DATETIME NULL,         -- NULL if no claim deadline applies
+    SentAt           DATETIME NULL,
+    ExpiresAt        DATETIME NULL,
     FOREIGN KEY (UserID) REFERENCES Users(UserID)
 );
 
@@ -211,9 +245,9 @@ CREATE TABLE Notifications (
 -- ADMIN ACTIVITY LOG
 -- ============================================================
 
--- Immutable audit trail of every admin action.
--- Since the system is both in-store and online, Channel distinguishes
--- where the action was performed.
+-- Append-only audit trail of every action performed by admin accounts.
+-- Channel differentiates between actions taken in-store versus through
+-- the online platform.
 -- ActionType examples: 'ProcessRental', 'IssuePenalty', 'SuspendUser',
 --                      'MarkCopySold', 'UpdateStock', 'SettlePenalty'
 -- Channel: 'InStore' | 'Online'
@@ -221,38 +255,10 @@ CREATE TABLE AdminActivityLog (
     LogID        INT PRIMARY KEY,
     AdminID      INT NOT NULL,
     ActionType   VARCHAR(50) NOT NULL,
-    TargetTable  VARCHAR(50),               -- e.g. 'Users', 'Penalties', 'PhysicalCopies'
-    TargetID     INT,                       -- The PK of the affected row
+    TargetTable  VARCHAR(50),
+    TargetID     INT,
     Notes        VARCHAR(255),
-    Channel      VARCHAR(10) NOT NULL,      -- 'InStore' | 'Online'
+    Channel      VARCHAR(10) NOT NULL,
     ActionTime   DATETIME NOT NULL,
     FOREIGN KEY (AdminID) REFERENCES Admins(AdminID)
-);
-
--- ============================================================
--- MEMBERSHIP TIERS & USER MEMBERSHIPS
--- ============================================================
-
--- Defines each membership level and the discount it provides.
--- DiscountPercent applies to both PhysicalPrice and DigitalRentalPrice
--- at transaction time.
-CREATE TABLE MembershipTiers (
-    TierID          INT PRIMARY KEY,
-    TierName        VARCHAR(30) NOT NULL,   -- e.g. 'Basic', 'Silver', 'Gold'
-    DiscountPercent DECIMAL(5,2) NOT NULL,  -- e.g. 10.00 = 10% off
-    Description     VARCHAR(100)
-);
-
--- Links a user to their current membership tier with validity dates.
--- A user with no row here is treated as non-member (no discount).
--- Status: 'Active' | 'Expired' | 'Cancelled'
-CREATE TABLE UserMemberships (
-    MembershipID INT PRIMARY KEY,
-    UserID       INT NOT NULL,
-    TierID       INT NOT NULL,
-    StartDate    DATE NOT NULL,
-    EndDate      DATE NOT NULL,
-    Status       VARCHAR(20) DEFAULT 'Active',
-    FOREIGN KEY (UserID) REFERENCES Users(UserID),
-    FOREIGN KEY (TierID) REFERENCES MembershipTiers(TierID)
 );
