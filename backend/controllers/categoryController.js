@@ -1,4 +1,4 @@
-// Import Category model (handles DB operations for Categories table)
+// Import the Category model to handle database operations for the Categories table
 const Category = require('../models/Category');
 // Import validation helpers from express-validator
 const { body, validationResult } = require('express-validator');
@@ -31,7 +31,7 @@ const getCategoryById = async (req, res) => {
         // Extract categoryId from URL params
         const { categoryId } = req.params;
         
-        // Query DB for category by ID
+     // Query the database to retrieve a category by its ID
         const category = await Category.findById(categoryId);
         if (!category) {
             // If not found, return 404
@@ -48,8 +48,7 @@ const getCategoryById = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
-
-// Controller: Create new category (admin-only)
+// Controller: Create a new category (Admin only)
 const createCategory = async (req, res) => {
     try {
         // Run validation checks
@@ -81,7 +80,7 @@ const createCategory = async (req, res) => {
     }
 };
 
-// Controller: Update category (admin-only)
+// Controller: Update an existing category 
 const updateCategory = async (req, res) => {
     try {
         // Validate input
@@ -90,7 +89,7 @@ const updateCategory = async (req, res) => {
             return res.status(400).json({ errors: errors.array() });
         }
 
-        // Extract categoryId from URL and new name from body
+        // Extract categoryId from URL parameters and the new name from the request body
         const { categoryId } = req.params;
         const { categoryName } = req.body;
 
@@ -111,7 +110,7 @@ const updateCategory = async (req, res) => {
             return res.status(400).json({ message: 'Failed to update category' });
         }
 
-        // Fetch updated category to return in response
+        // Retrieve the updated category from the database to include in the response
         const updatedCategory = await Category.findById(categoryId);
         res.json({ 
             message: 'Category updated successfully', 
