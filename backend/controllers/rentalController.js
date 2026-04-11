@@ -9,7 +9,7 @@ const { body, validationResult } = require('express-validator');
 // NOTE: In production you'd use auto-increment IDs or GUIDs instead
 const generateRentalId = () => Math.floor(Math.random() * 1000000) + 1;
 
-// ---------------------- Rental Routes ----------------------
+// --------------- Rental Routes ------------------
 
 // Controller: Rent a digital game
 const rentGame = async (req, res) => {
@@ -95,7 +95,7 @@ const returnGame = async (req, res) => {
     }
 };
 
-// Controller: Get rental history for a specific user
+// Controller: Retrieve rental history for a specific user
 const getUserRentals = async (req, res) => {
     try {
         const { userId } = req.params;
@@ -167,7 +167,7 @@ const getOverdueRentals = async (req, res) => {
     }
 };
 
-// ---------------------- Digital Waitlist Routes ----------------------
+// ------------- Digital Waitlist Routes ----------------
 
 // Controller: Add user to digital waitlist for a game
 const joinDigitalWaitlist = async (req, res) => {
@@ -203,7 +203,7 @@ const joinDigitalWaitlist = async (req, res) => {
     }
 };
 
-// Controller: Get digital waitlist for a specific user
+// Controller: Retrieve a user's digital waitlist entries
 const getUserWaitlist = async (req, res) => {
     try {
         const { userId } = req.params;
@@ -244,7 +244,7 @@ const validateJoinWaitlist = [
     body('gameId').isInt({ min: 1 }).withMessage('Valid game ID is required')
 ];
 
-// Export all controller functions and validation middleware
+// Export all controller functions and validation middleware for use in routes
 module.exports = {
     rentGame,
     returnGame,
