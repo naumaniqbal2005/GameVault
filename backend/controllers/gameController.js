@@ -11,7 +11,7 @@ const generateGameId = () => Math.floor(Math.random() * 1000000) + 1;
 // Controller: Get all games with optional filters
 const getAllGames = async (req, res) => {
     try {
-        // Extract filters from query string (category, platform, genre, search term)
+        // Extract filters (category, platform, genre, search term) from the query string
         const filters = {
             category: req.query.category,
             platform: req.query.platform,
@@ -57,7 +57,7 @@ const getGameById = async (req, res) => {
     }
 };
 
-// Controller: Create new game (admin-only)
+// Controller: Handles creation of a new game (restricted to admin users)
 const createGame = async (req, res) => {
     try {
         // Run validation checks
@@ -111,7 +111,7 @@ const updateGame = async (req, res) => {
             return res.status(400).json({ errors: errors.array() });
         }
 
-        // Extract gameId from URL and new fields from body
+     // Extract gameId from URL parameters and updated game fields from request body
         const { gameId } = req.params;
         const { gameTitle, platform, genre, categoryId, physicalPrice, digitalRentalPrice } = req.body;
 
@@ -221,7 +221,7 @@ const validateCreateGame = [
     body('digitalRentalPrice').optional().isFloat({ min: 0 }).withMessage('Digital rental price must be a non-negative number')
 ];
 
-// Validation middleware for updating a game
+// Middleware: Validate request data for updating a game
 const validateUpdateGame = [
     body('gameTitle').optional().trim().isLength({ min: 1, max: 100 }).withMessage('Game title must be less than 100 characters'),
     body('platform').optional().isLength({ max: 50 }).withMessage('Platform must be less than 50 characters'),
