@@ -1,17 +1,15 @@
-// Load environment variables from .env file
+// Initialize configuration by loading environment variables from the .env file
 require('dotenv').config();
 
-// Import MSSQL library
+// Import library mssql
 const sql = require('mssql');
-
-// Log environment variables to confirm they are loaded correctly
+// Debug: Log environment variables to verify they are loaded correctly (development only)
 console.log('Environment variables loaded:');
 console.log('DB_USER:', process.env.DB_USER);
 console.log('DB_SERVER:', process.env.DB_SERVER);
 console.log('DB_NAME:', process.env.DB_NAME);
 
-// Build connection string for SQL Server
-// TrustServerCertificate=true is used to bypass SSL certificate validation (common in local dev)
+// Build SQL Server connection string; TrustServerCertificate=true bypasses SSL validation (for local development only)
 const connectionString = `Server=${process.env.DB_SERVER};Database=${process.env.DB_NAME};User Id=${process.env.DB_USER};Password=${process.env.DB_PASSWORD};TrustServerCertificate=true;`;
 
 // Create a connection pool using the connection string
@@ -19,7 +17,7 @@ const connectionString = `Server=${process.env.DB_SERVER};Database=${process.env
 const poolPromise = new sql.ConnectionPool(connectionString)
   .connect()
   .then(pool => {
-    // If connection succeeds, log confirmation
+   // Log a confirmation message if the connection is successful
     console.log('Connected to MSSQL successfully');
     return pool;
   })
@@ -27,7 +25,7 @@ const poolPromise = new sql.ConnectionPool(connectionString)
     // If connection fails, log error details
     console.error('Database Connection Failed!', err);
 
-    // Hide the actual password when printing the connection string for security
+// Mask the password when logging the connection string to protect sensitive information
     console.error('Connection String:', connectionString.replace(/Password=[^;]+/, 'Password=[REDACTED]'));
     
     // Provide specific hints if login fails
