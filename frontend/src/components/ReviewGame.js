@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 const API = 'http://localhost:5000/api';
 
@@ -16,27 +16,27 @@ export default function ReviewGame({ user }) {
 
   const uid = Number(user.UserID);
 
-  useEffect(() => {
-    fetch(`${API}/games`).then(r => r.json()).then(d => setGames(d.games || [])).catch(() => {});
-    loadRentals();
-    loadReviews();
-  }, []);
-
-  const loadRentals = async () => {
+  const loadRentals = useCallback(async () => {
     try {
       const res = await fetch(`${API}/rentals/user/${uid}`);
       const d = await res.json();
       setRentals(Array.isArray(d) ? d : d.rentals || []);
     } catch { setRentals([]); }
-  };
+  }, [uid]);
 
-  const loadReviews = async () => {
+  const loadReviews = useCallback(async () => {
     try {
       const res = await fetch(`${API}/reviews/user/${uid}`);
       const d = await res.json();
       setReviews(Array.isArray(d) ? d : d.reviews || []);
     } catch { setReviews([]); }
-  };
+  }, [uid]);
+
+  useEffect(() => {
+    fetch(`${API}/games`).then(r => r.json()).then(d => setGames(d.games || [])).catch(() => {});
+    loadRentals();
+    loadReviews();
+  }, [loadRentals, loadReviews]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

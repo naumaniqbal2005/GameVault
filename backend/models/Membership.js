@@ -119,6 +119,39 @@ class UserMembership {
         }
     }
 
+    static async findById(membershipId) {
+        try {
+            const pool = await poolPromise;
+            const result = await pool.request()
+                .input('MembershipID', require('mssql').Int, membershipId)
+                .query(`
+                    SELECT um.*, u.FullName as UserName, u.Email, mt.TierName
+                    FROM UserMemberships um
+                    JOIN Users u ON um.UserID = u.UserID
+                    JOIN MembershipTiers mt ON um.TierID = mt.TierID
+                    WHERE um.MembershipID = @MembershipID
+                `);
+            return result.recordset[0];
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async delete(membershipId) {
+        try {
+            const pool = await poolPromise;
+            const result = await pool.request()
+                .input('MembershipID', require('mssql').Int, membershipId)
+                .query(`
+                    DELETE FROM UserMemberships 
+                    WHERE MembershipID = @MembershipID
+                `);
+            return result.rowsAffected[0] > 0;
+        } catch (error) {
+            throw error;
+        }
+    }
+
     static async getAll() {
         try {
             const pool = await poolPromise;

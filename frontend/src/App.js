@@ -3,6 +3,12 @@ import GameList from './components/GameList';
 import RentGame from './components/RentGame';
 import PurchaseGame from './components/PurchaseGame';
 import ReviewGame from './components/ReviewGame';
+import AdminDashboard from './components/AdminDashboard';
+import AdminUsers from './components/AdminUsers';
+import AdminGames from './components/AdminGames';
+import AdminRentals from './components/AdminRentals';
+import AdminTransactions from './components/AdminTransactions';
+import AdminMembership from './components/AdminMembership';
 import './App.css';
 
 const API = 'http://localhost:5000/api';
@@ -14,10 +20,21 @@ export default function App() {
   const [form, setForm] = useState({ fullName: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const handleAuth = async (e) => {
     e.preventDefault();
     setError(''); setLoading(true);
+    
+    // Check for admin access with specific email and password
+    if (tab === 'login' && form.email === 'admin@email.com' && form.password === 'pass') {
+      setIsAdmin(true);
+      setUser({ fullName: 'Admin', email: form.email, isAdmin: true });
+      setPage('admin');
+      setLoading(false);
+      return;
+    }
+    
     const url = tab === 'login' ? `${API}/users/login` : `${API}/users/register`;
     try {
       const res = await fetch(url, {
@@ -38,11 +55,20 @@ export default function App() {
     setLoading(false);
   };
 
-  const navItems = [
+  const userNavItems = [
     { id: 'games', label: 'Catalog', icon: '◈' },
     { id: 'rent', label: 'Rent', icon: '⟳' },
     { id: 'purchase', label: 'Purchase', icon: '◉' },
     { id: 'review', label: 'Reviews', icon: '★' },
+  ];
+
+  const adminNavItems = [
+    { id: 'admin', label: 'Dashboard', icon: '⚙️' },
+    { id: 'admin-users', label: 'Users', icon: '👥' },
+    { id: 'admin-games', label: 'Games', icon: '🎮' },
+    { id: 'admin-rentals', label: 'Rentals', icon: '📋' },
+    { id: 'admin-transactions', label: 'Transactions', icon: '💰' },
+    { id: 'admin-membership', label: 'Membership', icon: '👑' },
   ];
 
   if (!user) {
@@ -102,7 +128,7 @@ export default function App() {
           <span className="brand-name">GAMEVAULT</span>
         </div>
         <div className="nav-links">
-          {navItems.map(n => (
+          {(isAdmin ? adminNavItems : userNavItems).map(n => (
             <button key={n.id} className={`nav-btn ${page === n.id ? 'active' : ''}`} onClick={() => setPage(n.id)}>
               {n.icon} {n.label}
             </button>
@@ -113,7 +139,7 @@ export default function App() {
             <div className="user-avatar">{user.fullName?.[0]?.toUpperCase() || 'U'}</div>
             {user.fullName}
           </div>
-          <button className="btn-logout" onClick={() => { setUser(null); setPage('games'); }}>Logout</button>
+          <button className="btn-logout" onClick={() => { setUser(null); setIsAdmin(false); setPage('games'); }}>Logout</button>
         </div>
       </nav>
       <div className="main">
@@ -121,7 +147,14 @@ export default function App() {
         {page === 'rent' && <RentGame user={user} />}
         {page === 'purchase' && <PurchaseGame user={user} />}
         {page === 'review' && <ReviewGame user={user} />}
+        {isAdmin && page === 'admin' && <AdminDashboard />}
+        {isAdmin && page === 'admin-users' && <AdminUsers />}
+        {isAdmin && page === 'admin-games' && <AdminGames />}
+        {isAdmin && page === 'admin-rentals' && <AdminRentals />}
+        {isAdmin && page === 'admin-transactions' && <AdminTransactions />}
+        {isAdmin && page === 'admin-membership' && <AdminMembership />}
       </div>
     </>
   );
 }
+

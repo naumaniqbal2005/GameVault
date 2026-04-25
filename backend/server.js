@@ -11,6 +11,10 @@ const purchaseRoutes = require('./routes/purchaseRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const membershipRoutes = require('./routes/membershipRoutes');
+const physicalCopyRoutes = require('./routes/physicalCopyRoutes');
+const digitalCopyRoutes = require('./routes/digitalCopyRoutes');
+const transactionRoutes = require('./routes/transactionRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 const app = express();
 app.use(express.json()); 
@@ -24,6 +28,10 @@ app.use('/api/purchases', purchaseRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/memberships', membershipRoutes);
+app.use('/api/physical-copies', physicalCopyRoutes);
+app.use('/api/digital-copies', digitalCopyRoutes);
+app.use('/api/transactions', transactionRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 app.use((err, req, res, next) => {
     console.error(err.stack);

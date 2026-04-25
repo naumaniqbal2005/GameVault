@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 const API = 'http://localhost:5000/api';
 
@@ -12,10 +12,18 @@ export default function RentGame({ user }) {
   const [msg, setMsg]         = useState({ type: '', text: '' });
   const [loading, setLoading] = useState(false);
 
+  const loadRentals = useCallback(async () => {
+    try {
+      const res = await fetch(`${API}/rentals/user/${user.userID || user.UserID || user.id}`);
+      const d = await res.json();
+      setRentals(Array.isArray(d) ? d : d.rentals || []);
+    } catch { setRentals([]); }
+  }, [user.userID, user.UserID, user.id]);
+
   useEffect(() => {
     fetch(`${API}/games`).then(r => r.json()).then(d => setGames(d.games || [])).catch(() => {});
     loadRentals();
-  }, []);
+  }, [loadRentals]);
 
   useEffect(() => {
     if (!gameId) return setCopies([]);
@@ -24,14 +32,6 @@ export default function RentGame({ user }) {
       .then(d => setCopies(d.copies || d || []))
       .catch(() => setCopies([]));
   }, [gameId]);
-
-  const loadRentals = async () => {
-    try {
-      const res = await fetch(`${API}/rentals/user/${user.userID || user.UserID || user.id}`);
-      const d = await res.json();
-      setRentals(Array.isArray(d) ? d : d.rentals || []);
-    } catch { setRentals([]); }
-  };
 
   const handleRent = async (e) => {
     e.preventDefault();

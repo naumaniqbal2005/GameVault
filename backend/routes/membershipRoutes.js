@@ -12,6 +12,7 @@ const {
     createUserMembership,
     updateMembershipStatus,
     getAllUserMemberships,
+    deleteMembership,
     validateCreateTier,
     validateCreateUserMembership,
     validateUpdateStatus
@@ -49,6 +50,9 @@ router.put('/:membershipId/status', validateUpdateStatus, updateMembershipStatus
 
 // GET /membership → Fetch all user memberships
 router.get('/', getAllUserMemberships);
+
+// DELETE /membership/:membershipId → Delete a membership (admin-only)
+router.delete('/:membershipId', deleteMembership);
 
 // Export router so it can be mounted in server.js or app.js
 module.exports = router;

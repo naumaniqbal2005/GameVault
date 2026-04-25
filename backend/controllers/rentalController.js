@@ -2,12 +2,16 @@
 const Rental = require('../models/Rental');
 const Game = require('../models/Game');
 const Waitlist = require('../models/Waitlist');
+const Transaction = require('../models/Transaction');
 // Import validation helpers from express-validator
 const { body, validationResult } = require('express-validator');
 
 // Utility: generate a random RentalID
 // NOTE: In production you'd use auto-increment IDs or GUIDs instead
 const generateRentalId = () => Math.floor(Math.random() * 1000000) + 1;
+
+// Utility: generate a random TransactionID
+const generateTransactionId = () => Math.floor(Math.random() * 1000000) + 1;
 
 // --------------- Rental Routes ------------------
 
@@ -55,6 +59,21 @@ const rentGame = async (req, res) => {
 
         // Insert into DB via model
         const newRental = await Rental.create(rentalData);
+
+        // Create transaction record
+        const transactionData = {
+            TransactionID: generateTransactionId(),
+            UserID: userId,
+            RentalID: newRental.RentalID,
+            PurchaseID: null,
+            AdminID: 1, // Default admin ID - in production, get from authenticated admin
+            Amount: game.DigitalRentalPrice || 0,
+            TransactionDate: new Date(),
+            DiscountApplied: 0.00
+        };
+
+        await Transaction.create(transactionData);
+
         res.status(201).json({ 
             message: 'Game rented successfully', 
             rental: newRental,

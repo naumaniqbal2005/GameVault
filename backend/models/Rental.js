@@ -48,7 +48,25 @@ class Rental {
             const result = await pool.request()
                 .input('RentalID', require('mssql').Int, rentalId)
                 .query(`
-                    SELECT r.*, u.FullName as UserName, g.GameTitle, dc.CopyID
+                    SELECT 
+                        r.RentalID,
+                        r.UserID,
+                        r.CopyID,
+                        r.DateIssued,
+                        r.DateDue,
+                        r.DateReturned,
+                        u.FullName as UserName,
+                        u.Email as UserEmail,
+                        g.GameTitle,
+                        g.Platform,
+                        g.Genre,
+                        CASE 
+                            WHEN r.DateReturned IS NULL THEN 'ACTIVE'
+                            WHEN r.DateReturned <= r.DateDue THEN 'ON TIME'
+                            ELSE 'LATE'
+                        END as RentalStatus,
+                        DATEDIFF(day, r.DateIssued, r.DateDue) as RentalDays,
+                        DATEDIFF(day, r.DateDue, ISNULL(r.DateReturned, GETDATE())) as DaysOverdue
                     FROM Rentals r
                     JOIN Users u ON r.UserID = u.UserID
                     JOIN DigitalCopies dc ON r.CopyID = dc.CopyID
@@ -67,8 +85,27 @@ class Rental {
             const result = await pool.request()
                 .input('UserID', require('mssql').Int, userId)
                 .query(`
-                    SELECT r.*, g.GameTitle, dc.CopyID
+                    SELECT 
+                        r.RentalID,
+                        r.UserID,
+                        r.CopyID,
+                        r.DateIssued,
+                        r.DateDue,
+                        r.DateReturned,
+                        u.FullName as UserName,
+                        u.Email as UserEmail,
+                        g.GameTitle,
+                        g.Platform,
+                        g.Genre,
+                        CASE 
+                            WHEN r.DateReturned IS NULL THEN 'ACTIVE'
+                            WHEN r.DateReturned <= r.DateDue THEN 'ON TIME'
+                            ELSE 'LATE'
+                        END as RentalStatus,
+                        DATEDIFF(day, r.DateIssued, r.DateDue) as RentalDays,
+                        DATEDIFF(day, r.DateDue, ISNULL(r.DateReturned, GETDATE())) as DaysOverdue
                     FROM Rentals r
+                    JOIN Users u ON r.UserID = u.UserID
                     JOIN DigitalCopies dc ON r.CopyID = dc.CopyID
                     JOIN Games g ON dc.GameID = g.GameID
                     WHERE r.UserID = @UserID
@@ -86,8 +123,27 @@ class Rental {
             const result = await pool.request()
                 .input('UserID', require('mssql').Int, userId)
                 .query(`
-                    SELECT r.*, g.GameTitle, dc.CopyID
+                    SELECT 
+                        r.RentalID,
+                        r.UserID,
+                        r.CopyID,
+                        r.DateIssued,
+                        r.DateDue,
+                        r.DateReturned,
+                        u.FullName as UserName,
+                        u.Email as UserEmail,
+                        g.GameTitle,
+                        g.Platform,
+                        g.Genre,
+                        CASE 
+                            WHEN r.DateReturned IS NULL THEN 'ACTIVE'
+                            WHEN r.DateReturned <= r.DateDue THEN 'ON TIME'
+                            ELSE 'LATE'
+                        END as RentalStatus,
+                        DATEDIFF(day, r.DateIssued, r.DateDue) as RentalDays,
+                        DATEDIFF(day, r.DateDue, ISNULL(r.DateReturned, GETDATE())) as DaysOverdue
                     FROM Rentals r
+                    JOIN Users u ON r.UserID = u.UserID
                     JOIN DigitalCopies dc ON r.CopyID = dc.CopyID
                     JOIN Games g ON dc.GameID = g.GameID
                     WHERE r.UserID = @UserID AND r.DateReturned IS NULL
@@ -153,7 +209,25 @@ class Rental {
             const pool = await poolPromise;
             const result = await pool.request()
                 .query(`
-                    SELECT r.*, u.FullName as UserName, g.GameTitle
+                    SELECT 
+                        r.RentalID,
+                        r.UserID,
+                        r.CopyID,
+                        r.DateIssued,
+                        r.DateDue,
+                        r.DateReturned,
+                        u.FullName as UserName,
+                        u.Email as UserEmail,
+                        g.GameTitle,
+                        g.Platform,
+                        g.Genre,
+                        CASE 
+                            WHEN r.DateReturned IS NULL THEN 'ACTIVE'
+                            WHEN r.DateReturned <= r.DateDue THEN 'ON TIME'
+                            ELSE 'LATE'
+                        END as RentalStatus,
+                        DATEDIFF(day, r.DateIssued, r.DateDue) as RentalDays,
+                        DATEDIFF(day, r.DateDue, ISNULL(r.DateReturned, GETDATE())) as DaysOverdue
                     FROM Rentals r
                     JOIN Users u ON r.UserID = u.UserID
                     JOIN DigitalCopies dc ON r.CopyID = dc.CopyID
@@ -171,7 +245,21 @@ class Rental {
             const pool = await poolPromise;
             const result = await pool.request()
                 .query(`
-                    SELECT r.*, u.FullName as UserName, u.Email, g.GameTitle
+                    SELECT 
+                        r.RentalID,
+                        r.UserID,
+                        r.CopyID,
+                        r.DateIssued,
+                        r.DateDue,
+                        r.DateReturned,
+                        u.FullName as UserName,
+                        u.Email as UserEmail,
+                        g.GameTitle,
+                        g.Platform,
+                        g.Genre,
+                        'LATE' as RentalStatus,
+                        DATEDIFF(day, r.DateIssued, r.DateDue) as RentalDays,
+                        DATEDIFF(day, r.DateDue, GETDATE()) as DaysOverdue
                     FROM Rentals r
                     JOIN Users u ON r.UserID = u.UserID
                     JOIN DigitalCopies dc ON r.CopyID = dc.CopyID

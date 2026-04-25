@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 const API = 'http://localhost:5000/api';
 
@@ -13,10 +13,18 @@ export default function PurchaseGame({ user }) {
 
   const uid = Number(user.UserID);
 
+  const loadPurchases = useCallback(async () => {
+    try {
+      const res = await fetch(`${API}/purchases/user/${uid}`);
+      const d = await res.json();
+      setPurchases(Array.isArray(d) ? d : d.purchases || []);
+    } catch { setPurchases([]); }
+  }, [uid]);
+
   useEffect(() => {
     fetch(`${API}/games`).then(r => r.json()).then(d => setGames(d.games || [])).catch(() => {});
     loadPurchases();
-  }, []);
+  }, [loadPurchases]);
 
   useEffect(() => {
     if (!gameId) return setCopies([]);
@@ -25,14 +33,6 @@ export default function PurchaseGame({ user }) {
       .then(d => setCopies(d.copies || d || []))
       .catch(() => setCopies([]));
   }, [gameId]);
-
-  const loadPurchases = async () => {
-    try {
-      const res = await fetch(`${API}/purchases/user/${uid}`);
-      const d = await res.json();
-      setPurchases(Array.isArray(d) ? d : d.purchases || []);
-    } catch { setPurchases([]); }
-  };
 
   const handlePurchase = async (e) => {
     e.preventDefault();

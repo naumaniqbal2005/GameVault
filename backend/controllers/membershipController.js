@@ -170,6 +170,34 @@ const getAllUserMemberships = async (req, res) => {
     }
 };
 
+// Controller: Delete a membership (admin-only)
+const deleteMembership = async (req, res) => {
+    try {
+        const { membershipId } = req.params;
+        
+        // Check if membership exists
+        const membership = await UserMembership.findById(membershipId);
+        if (!membership) {
+            return res.status(404).json({ message: 'Membership not found' });
+        }
+
+        // Only allow deletion of cancelled memberships
+        if (membership.Status !== 'Cancelled') {
+            return res.status(400).json({ message: 'Only cancelled memberships can be deleted' });
+        }
+
+        const deleted = await UserMembership.delete(membershipId);
+        if (!deleted) {
+            return res.status(400).json({ message: 'Failed to delete membership' });
+        }
+
+        res.json({ message: 'Membership deleted successfully' });
+    } catch (error) {
+        console.error('Delete membership error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 // ---------------------- Validation Middleware ----------------------
 
 // Validation for creating a membership tier
@@ -202,6 +230,7 @@ module.exports = {
     createUserMembership,
     updateMembershipStatus,
     getAllUserMemberships,
+    deleteMembership,
     validateCreateTier,
     validateCreateUserMembership,
     validateUpdateStatus

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 const API = 'http://localhost:5000/api';
 const BANNERS = ['banner-1','banner-2','banner-3','banner-4','banner-5'];
@@ -23,9 +23,7 @@ export default function GameList({ user }) {
   const [search, setSearch] = useState('');
   const [imgErrors, setImgErrors] = useState({});
 
-  useEffect(() => { fetchGames(); }, [search]);
-
-  const fetchGames = async () => {
+  const fetchGames = useCallback(async () => {
     setLoading(true);
     try {
       const q = search ? `?search=${encodeURIComponent(search)}` : '';
@@ -34,7 +32,9 @@ export default function GameList({ user }) {
       setGames(Array.isArray(data) ? data : data.games || []);
     } catch { setGames([]); }
     setLoading(false);
-  };
+  }, [search]);
+
+  useEffect(() => { fetchGames(); }, [search, fetchGames]);
 
   return (
     <div>

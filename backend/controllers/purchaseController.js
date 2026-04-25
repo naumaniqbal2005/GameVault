@@ -2,12 +2,16 @@
 const Purchase = require('../models/Purchase');
 const Game = require('../models/Game');
 const Waitlist = require('../models/Waitlist');
+const Transaction = require('../models/Transaction');
 // Import validation helpers from express-validator
 const { body, validationResult } = require('express-validator');
 
 // Utility: generate a random PurchaseID
 // NOTE: In production you'd use auto-increment IDs or GUIDs instead
 const generatePurchaseId = () => Math.floor(Math.random() * 1000000) + 1;
+
+// Utility: generate a random TransactionID
+const generateTransactionId = () => Math.floor(Math.random() * 1000000) + 1;
 
 // ---------------------- Purchase Routes ----------------------
 
@@ -30,6 +34,10 @@ const purchaseGame = async (req, res) => {
 
         const game = copyInfo[0]; // Get game details for pricing
 
+        // Debug: Log the game info to check what data we're getting
+        console.log('Game info for purchase:', game);
+        console.log('PhysicalPrice:', game.PhysicalPrice);
+
         // Build purchase object
         const purchaseData = {
             PurchaseID: generatePurchaseId(),
@@ -41,6 +49,23 @@ const purchaseGame = async (req, res) => {
 
         // Insert into DB via model
         const newPurchase = await Purchase.create(purchaseData);
+
+        // Create transaction record
+        const transactionAmount = game.PhysicalPrice || 0;
+        const transactionData = {
+            TransactionID: generateTransactionId(),
+            UserID: userId,
+            RentalID: null,
+            PurchaseID: newPurchase.PurchaseID,
+            AdminID: adminId,
+            Amount: transactionAmount,
+            TransactionDate: new Date(),
+            DiscountApplied: 0.00
+        };
+
+        console.log('Creating transaction with amount:', transactionAmount); // Debug log
+        await Transaction.create(transactionData);
+
         res.status(201).json({ 
             message: 'Game purchased successfully', 
             purchase: newPurchase,
