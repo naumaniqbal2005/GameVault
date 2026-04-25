@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import GameList from './components/GameList';
 import RentGame from './components/RentGame';
 import PurchaseGame from './components/PurchaseGame';
@@ -22,6 +22,34 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // Check for saved user session on app load
+  useEffect(() => {
+    const savedUser = localStorage.getItem('gamevault_user');
+    const savedIsAdmin = localStorage.getItem('gamevault_isAdmin');
+    
+    if (savedUser) {
+      try {
+        const userData = JSON.parse(savedUser);
+        setUser(userData);
+        setIsAdmin(savedIsAdmin === 'true');
+        setPage(savedIsAdmin === 'true' ? 'admin' : 'games');
+      } catch (error) {
+        console.error('Error parsing saved user data:', error);
+        localStorage.removeItem('gamevault_user');
+        localStorage.removeItem('gamevault_isAdmin');
+      }
+    }
+  }, []);
+
+  const handleLogout = () => {
+    setUser(null);
+    setIsAdmin(false);
+    setPage('games');
+    setTab('login');
+    localStorage.removeItem('gamevault_user');
+    localStorage.removeItem('gamevault_isAdmin');
+  };
+
   const handleAuth = async (e) => {
     e.preventDefault();
     setError(''); setLoading(true);
@@ -29,7 +57,10 @@ export default function App() {
     // Check for admin access with specific email and password
     if (tab === 'login' && form.email === 'admin@email.com' && form.password === 'pass') {
       setIsAdmin(true);
-      setUser({ fullName: 'Admin', email: form.email, isAdmin: true });
+      const adminUser = { fullName: 'Admin', email: form.email, isAdmin: true };
+      setUser(adminUser);
+      localStorage.setItem('gamevault_user', JSON.stringify(adminUser));
+      localStorage.setItem('gamevault_isAdmin', 'true');
       setPage('admin');
       setLoading(false);
       return;
@@ -45,7 +76,10 @@ export default function App() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || data.error || 'Something went wrong');
       if (tab === 'login') {
-        setUser(data.user || data);
+        const userData = data.user || data;
+        setUser(userData);
+        localStorage.setItem('gamevault_user', JSON.stringify(userData));
+        localStorage.setItem('gamevault_isAdmin', 'false');
         setPage('games');
       } else {
         setTab('login');
