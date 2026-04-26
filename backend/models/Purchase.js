@@ -19,7 +19,7 @@ class Purchase {
                     .query(`
                         INSERT INTO Purchases (PurchaseID, UserID, CopyID, AdminID, PurchaseDate)
                         VALUES (@PurchaseID, @UserID, @CopyID, @AdminID, @PurchaseDate)
-                        SELECT SCOPE_IDENTITY() as PurchaseID
+                        SELECT @PurchaseID as PurchaseID
                     `);
 
                 // Update physical copy availability

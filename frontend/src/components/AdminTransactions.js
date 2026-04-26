@@ -123,6 +123,7 @@ export default function AdminTransactions() {
                 <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', fontSize: '14px', letterSpacing: '1px' }}>USER</th>
                 <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', fontSize: '14px', letterSpacing: '1px' }}>ADMIN</th>
                 <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', fontSize: '14px', letterSpacing: '1px' }}>TYPE</th>
+                <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', fontSize: '14px', letterSpacing: '1px' }}>RENTAL/PURCHASE ID</th>
                 <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', fontSize: '14px', letterSpacing: '1px' }}>AMOUNT</th>
                 <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', fontSize: '14px', letterSpacing: '1px' }}>DISCOUNT</th>
                 <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', fontSize: '14px', letterSpacing: '1px' }}>DATE</th>
@@ -194,6 +195,9 @@ export default function AdminTransactions() {
                     }}>
                       {transaction.TransactionType || '—'}
                     </div>
+                  </td>
+                  <td style={{ padding: '16px', fontSize: '15px', color: 'var(--text2)' }}>
+                    {transaction.RentalID ? `Rental #${transaction.RentalID}` : transaction.PurchaseID ? `Purchase #${transaction.PurchaseID}` : '—'}
                   </td>
                   <td style={{ padding: '16px', fontSize: '15px', color: 'var(--green)', fontWeight: '600', fontFamily: 'Orbitron, monospace' }}>
                     {formatAmount(transaction.Amount)}

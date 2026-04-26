@@ -49,6 +49,12 @@ const purchaseGame = async (req, res) => {
 
         // Insert into DB via model
         const newPurchase = await Purchase.create(purchaseData);
+        console.log('New purchase created:', newPurchase); // Debug log
+        console.log('PurchaseID:', newPurchase.PurchaseID); // Debug log
+
+        // Extract PurchaseID properly - it might be nested or in a different format
+        const purchaseId = newPurchase.PurchaseID || newPurchase.purchaseID || (newPurchase.recordset && newPurchase.recordset[0]?.PurchaseID);
+        console.log('Extracted PurchaseID:', purchaseId); // Debug log
 
         // Create transaction record
         const transactionAmount = game.PhysicalPrice || 0;
@@ -56,14 +62,15 @@ const purchaseGame = async (req, res) => {
             TransactionID: generateTransactionId(),
             UserID: userId,
             RentalID: null,
-            PurchaseID: newPurchase.PurchaseID,
+            PurchaseID: purchaseId,
             AdminID: adminId,
             Amount: transactionAmount,
             TransactionDate: new Date(),
             DiscountApplied: 0.00
         };
 
-        console.log('Creating transaction with amount:', transactionAmount); // Debug log
+        console.log('Creating transaction with PurchaseID:', purchaseId); // Debug log
+        console.log('Transaction data:', transactionData); // Debug log
         await Transaction.create(transactionData);
 
         res.status(201).json({ 

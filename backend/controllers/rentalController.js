@@ -59,12 +59,18 @@ const rentGame = async (req, res) => {
 
         // Insert into DB via model
         const newRental = await Rental.create(rentalData);
+        console.log('New rental created:', newRental); // Debug log
+        console.log('RentalID:', newRental.RentalID); // Debug log
+
+        // Extract RentalID properly - it might be nested or in a different format
+        const rentalId = newRental.RentalID || newRental.rentalID || (newRental.recordset && newRental.recordset[0]?.RentalID);
+        console.log('Extracted RentalID:', rentalId); // Debug log
 
         // Create transaction record
         const transactionData = {
             TransactionID: generateTransactionId(),
             UserID: userId,
-            RentalID: newRental.RentalID,
+            RentalID: rentalId,
             PurchaseID: null,
             AdminID: 1, // Default admin ID - in production, get from authenticated admin
             Amount: game.DigitalRentalPrice || 0,
@@ -72,6 +78,8 @@ const rentGame = async (req, res) => {
             DiscountApplied: 0.00
         };
 
+        console.log('Creating transaction with RentalID:', rentalId); // Debug log
+        console.log('Transaction data:', transactionData); // Debug log
         await Transaction.create(transactionData);
 
         res.status(201).json({ 

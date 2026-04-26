@@ -19,7 +19,7 @@ class Rental {
                     .query(`
                         INSERT INTO Rentals (RentalID, UserID, CopyID, DateIssued, DateDue)
                         VALUES (@RentalID, @UserID, @CopyID, @DateIssued, @DateDue)
-                        SELECT SCOPE_IDENTITY() as RentalID
+                        SELECT @RentalID as RentalID
                     `);
 
                 // Update digital copy availability

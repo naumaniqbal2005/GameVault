@@ -37,7 +37,11 @@ export default function AdminDashboard() {
   }, [loadStats]);
 
   const formatCurrency = (amount) => {
-    return `$${parseFloat(amount).toLocaleString()}`;
+    return `$${Math.round(parseFloat(amount)).toLocaleString()}`;
+  };
+
+  const formatNumber = (number) => {
+    return Math.round(parseInt(number)).toLocaleString();
   };
 
   const formatDate = (dateString) => {
@@ -95,7 +99,7 @@ export default function AdminDashboard() {
             boxShadow: 'var(--cyan-glow)'
           }}>👥</div>
           <div className="stat-info">
-            <div className="stat-val" style={{ color: 'var(--cyan)' }}>{stats.totalUsers}</div>
+            <div className="stat-val" style={{ color: 'var(--cyan)' }}>{formatNumber(stats.totalUsers)}</div>
             <div className="stat-label">Total Users</div>
           </div>
         </div>
@@ -109,7 +113,7 @@ export default function AdminDashboard() {
             boxShadow: '0 0 20px rgba(0,255,136,0.4)'
           }}>🎮</div>
           <div className="stat-info">
-            <div className="stat-val" style={{ color: 'var(--green)' }}>{stats.totalGames}</div>
+            <div className="stat-val" style={{ color: 'var(--green)' }}>{formatNumber(stats.totalGames)}</div>
             <div className="stat-label">Games</div>
           </div>
         </div>
@@ -123,7 +127,7 @@ export default function AdminDashboard() {
             boxShadow: 'var(--orange-glow)'
           }}>📋</div>
           <div className="stat-info">
-            <div className="stat-val" style={{ color: 'var(--orange)' }}>{stats.activeRentals}</div>
+            <div className="stat-val" style={{ color: 'var(--orange)' }}>{formatNumber(stats.activeRentals)}</div>
             <div className="stat-label">Active Rentals</div>
           </div>
         </div>
@@ -151,7 +155,7 @@ export default function AdminDashboard() {
             boxShadow: '0 0 20px rgba(157,78,221,0.4)'
           }}>📦</div>
           <div className="stat-info">
-            <div className="stat-val" style={{ color: 'var(--purple)' }}>{stats.totalRentals}</div>
+            <div className="stat-val" style={{ color: 'var(--purple)' }}>{formatNumber(stats.totalRentals)}</div>
             <div className="stat-label">Total Rentals</div>
           </div>
         </div>
@@ -165,7 +169,7 @@ export default function AdminDashboard() {
             boxShadow: 'var(--cyan-glow)'
           }}>🛒</div>
           <div className="stat-info">
-            <div className="stat-val" style={{ color: 'var(--cyan)' }}>{stats.totalPurchases}</div>
+            <div className="stat-val" style={{ color: 'var(--cyan)' }}>{formatNumber(stats.totalPurchases)}</div>
             <div className="stat-label">Total Purchases</div>
           </div>
         </div>
@@ -179,7 +183,7 @@ export default function AdminDashboard() {
             boxShadow: '0 0 20px rgba(0,255,136,0.4)'
           }}>💿</div>
           <div className="stat-info">
-            <div className="stat-val" style={{ color: 'var(--green)' }}>{stats.availableDigital}</div>
+            <div className="stat-val" style={{ color: 'var(--green)' }}>{formatNumber(stats.availableDigital)}</div>
             <div className="stat-label">Digital Copies</div>
           </div>
         </div>
@@ -193,7 +197,7 @@ export default function AdminDashboard() {
             boxShadow: 'var(--orange-glow)'
           }}>📀</div>
           <div className="stat-info">
-            <div className="stat-val" style={{ color: 'var(--orange)' }}>{stats.availablePhysical}</div>
+            <div className="stat-val" style={{ color: 'var(--orange)' }}>{formatNumber(stats.availablePhysical)}</div>
             <div className="stat-label">Physical Copies</div>
           </div>
         </div>
@@ -203,7 +207,7 @@ export default function AdminDashboard() {
         <div className="dashboard-section">
           <div className="section-header">
             <div className="section-title"> Overdue Rentals</div>
-            <div className="section-count" style={{ color: '#DC3545' }}>{stats.overdueRentals}</div>
+            <div className="section-count" style={{ color: '#DC3545' }}>{formatNumber(stats.overdueRentals)}</div>
           </div>
           <div className="section-content" style={{ 
             background: 'rgba(220,53,69,0.1)',
@@ -213,7 +217,7 @@ export default function AdminDashboard() {
             textAlign: 'center'
           }}>
             <div style={{ fontSize: '48px', fontWeight: 'bold', color: '#DC3545', marginBottom: '10px' }}>
-              {stats.overdueRentals}
+              {formatNumber(stats.overdueRentals)}
             </div>
             <div style={{ color: 'var(--text2)' }}>Rentals past due date</div>
           </div>

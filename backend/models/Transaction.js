@@ -3,23 +3,38 @@ const { poolPromise } = require('../config/db');
 class Transaction {
     static async create(transactionData) {
         try {
+            console.log('Transaction.create called with:', transactionData); // Debug log
             const pool = await poolPromise;
-            const result = await pool.request()
+            const request = pool.request()
                 .input('TransactionID', require('mssql').Int, transactionData.TransactionID)
                 .input('UserID', require('mssql').Int, transactionData.UserID)
-                .input('RentalID', require('mssql').Int, transactionData.RentalID || null)
-                .input('PurchaseID', require('mssql').Int, transactionData.PurchaseID || null)
                 .input('AdminID', require('mssql').Int, transactionData.AdminID)
                 .input('Amount', require('mssql').Decimal(10, 2), transactionData.Amount)
                 .input('TransactionDate', require('mssql').Date, transactionData.TransactionDate || new Date())
-                .input('DiscountApplied', require('mssql').Decimal(5, 2), transactionData.DiscountApplied || 0.00)
-                .query(`
-                    INSERT INTO Transactions (TransactionID, UserID, RentalID, PurchaseID, AdminID, Amount, TransactionDate, DiscountApplied)
-                    VALUES (@TransactionID, @UserID, @RentalID, @PurchaseID, @AdminID, @Amount, @TransactionDate, @DiscountApplied)
-                    SELECT SCOPE_IDENTITY() as TransactionID
-                `);
+                .input('DiscountApplied', require('mssql').Decimal(5, 2), transactionData.DiscountApplied || 0.00);
+
+            // Handle optional RentalID and PurchaseID
+            if (transactionData.RentalID && transactionData.RentalID !== null) {
+                request.input('RentalID', require('mssql').Int, transactionData.RentalID);
+            } else {
+                request.input('RentalID', require('mssql').Int, null);
+            }
+
+            if (transactionData.PurchaseID && transactionData.PurchaseID !== null) {
+                request.input('PurchaseID', require('mssql').Int, transactionData.PurchaseID);
+            } else {
+                request.input('PurchaseID', require('mssql').Int, null);
+            }
+
+            const result = await request.query(`
+                INSERT INTO Transactions (TransactionID, UserID, RentalID, PurchaseID, AdminID, Amount, TransactionDate, DiscountApplied)
+                VALUES (@TransactionID, @UserID, @RentalID, @PurchaseID, @AdminID, @Amount, @TransactionDate, @DiscountApplied)
+                SELECT SCOPE_IDENTITY() as TransactionID
+            `);
+            console.log('Transaction inserted successfully'); // Debug log
             return result.recordset[0];
         } catch (error) {
+            console.error('Transaction.create error:', error); // Debug log
             throw error;
         }
     }
