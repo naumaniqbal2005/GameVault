@@ -187,6 +187,18 @@ const getGamePhysicalWaitlist = async (req, res) => {
     }
 };
 
+const deleteWaitlist = async (req, res) => {
+    try {
+        const { waitlistId } = req.params;
+        
+        await Waitlist.removeFromPhysicalWaitlist(waitlistId);
+        res.json({ message: 'Waitlist entry deleted successfully' });
+    } catch (error) {
+        console.error('Delete waitlist error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 // ---------------------- Validation Middleware ----------------------
 
 // Validation for purchasing a game
@@ -211,6 +223,7 @@ module.exports = {
     joinPhysicalWaitlist,
     getUserPhysicalWaitlist,
     getGamePhysicalWaitlist,
+    deleteWaitlist,
     validatePurchaseGame,
     validateJoinPhysicalWaitlist
 };

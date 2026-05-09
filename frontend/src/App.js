@@ -31,14 +31,15 @@ export default function App() {
   useEffect(() => {
     const savedUser = localStorage.getItem('gamevault_user');
     const savedToken = localStorage.getItem('gamevault_token');
-    
-    if (savedUser && savedToken) {
+
+    if (savedUser) {
       try {
         const userData = JSON.parse(savedUser);
         setUser(userData);
-        setToken(savedToken);
-        // Verify admin token on app load
-        verifyAdminToken(savedToken);
+        if (savedToken) {
+          setToken(savedToken);
+          verifyAdminToken(savedToken);
+        }
       } catch (error) {
         console.error('Error parsing saved user data:', error);
         localStorage.removeItem('gamevault_user');

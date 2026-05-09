@@ -11,6 +11,7 @@ const {
     joinPhysicalWaitlist,
     getUserPhysicalWaitlist,
     getGamePhysicalWaitlist,
+    deleteWaitlist,
     validatePurchaseGame,
     validateJoinPhysicalWaitlist
 } = require('../controllers/purchaseController');
@@ -42,6 +43,7 @@ router.get('/waitlist/user/:userId', getUserPhysicalWaitlist);
 // GET /purchase/waitlist/game/:gameId → Get waitlist entries for a specific game
 router.get('/waitlist/game/:gameId', getGamePhysicalWaitlist);
 
+router.delete('/waitlist/:waitlistId', deleteWaitlist);
 // ---------------------- Admin Routes ----------------------
 // In production, add admin authentication middleware before these routes
 // Example: router.get('/', adminAuthMiddleware, getAllPurchases);

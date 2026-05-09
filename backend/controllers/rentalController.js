@@ -256,6 +256,19 @@ const getGameWaitlist = async (req, res) => {
     }
 };
 
+// Controller: Delete a waitlist entry
+const deleteWaitlist = async (req, res) => {
+    try {
+        const { waitlistId } = req.params;
+        
+        await Waitlist.removeFromDigitalWaitlist(waitlistId);
+        res.json({ message: 'Waitlist entry deleted successfully' });
+    } catch (error) {
+        console.error('Delete waitlist error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 // ---------------------- Validation Middleware ----------------------
 
 // Validation for renting a game
@@ -283,6 +296,7 @@ module.exports = {
     joinDigitalWaitlist,
     getUserWaitlist,
     getGameWaitlist,
+    deleteWaitlist,
     validateRentGame,
     validateJoinWaitlist
 };

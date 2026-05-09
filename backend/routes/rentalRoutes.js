@@ -15,7 +15,8 @@ const {
     getUserWaitlist,
     getGameWaitlist,
     validateRentGame,
-    validateJoinWaitlist
+    validateJoinWaitlist,
+    deleteWaitlist
 } = require('../controllers/rentalController');
 
 // ---------------------- Rental Routes ----------------------
@@ -50,6 +51,8 @@ router.get('/waitlist/user/:userId', getUserWaitlist);
 
 // GET /rental/waitlist/game/:gameId → Get waitlist entries for a specific game
 router.get('/waitlist/game/:gameId', getGameWaitlist);
+
+router.delete('/waitlist/:waitlistId', deleteWaitlist);
 
 // ---------------------- Admin Routes ----------------------
 // In production, add admin authentication middleware before these routes
