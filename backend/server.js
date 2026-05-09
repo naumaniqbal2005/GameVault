@@ -15,6 +15,7 @@ const physicalCopyRoutes = require('./routes/physicalCopyRoutes');
 const digitalCopyRoutes = require('./routes/digitalCopyRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
 app.use(express.json()); 
@@ -32,6 +33,7 @@ app.use('/api/physical-copies', physicalCopyRoutes);
 app.use('/api/digital-copies', digitalCopyRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.use((err, req, res, next) => {
     console.error(err.stack);

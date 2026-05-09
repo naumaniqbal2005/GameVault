@@ -20,51 +20,81 @@ export default function App() {
   const [form, setForm] = useState({ fullName: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [token, setToken] = useState(null);
 
   // Check for saved user session on app load
   useEffect(() => {
     const savedUser = localStorage.getItem('gamevault_user');
-    const savedIsAdmin = localStorage.getItem('gamevault_isAdmin');
+    const savedToken = localStorage.getItem('gamevault_token');
     
-    if (savedUser) {
+    if (savedUser && savedToken) {
       try {
         const userData = JSON.parse(savedUser);
         setUser(userData);
-        setIsAdmin(savedIsAdmin === 'true');
-        setPage(savedIsAdmin === 'true' ? 'admin' : 'games');
+        setToken(savedToken);
+        // Verify admin token on app load
+        verifyAdminToken(savedToken);
       } catch (error) {
         console.error('Error parsing saved user data:', error);
         localStorage.removeItem('gamevault_user');
-        localStorage.removeItem('gamevault_isAdmin');
+        localStorage.removeItem('gamevault_token');
       }
     }
   }, []);
 
   const handleLogout = () => {
     setUser(null);
-    setIsAdmin(false);
+    setToken(null);
     setPage('games');
     setTab('login');
     localStorage.removeItem('gamevault_user');
-    localStorage.removeItem('gamevault_isAdmin');
+    localStorage.removeItem('gamevault_token');
+  };
+
+  const verifyAdminToken = async (authToken) => {
+    try {
+      const res = await fetch(`${API}/admin/verify`, {
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        }
+      });
+      const data = await res.json();
+      if (res.ok && data.valid) {
+        setPage('admin');
+      }
+    } catch (error) {
+      console.error('Token verification failed:', error);
+    }
   };
 
   const handleAuth = async (e) => {
     e.preventDefault();
     setError(''); setLoading(true);
     
-    // Check for admin access with specific email and password
-    if (tab === 'login' && form.email === 'admin@email.com' && form.password === 'pass') {
-      setIsAdmin(true);
-      const adminUser = { fullName: 'Admin', email: form.email, isAdmin: true };
-      setUser(adminUser);
-      localStorage.setItem('gamevault_user', JSON.stringify(adminUser));
-      localStorage.setItem('gamevault_isAdmin', 'true');
-      setPage('admin');
-      setLoading(false);
-      return;
-    }
+    // Check for admin access - try admin login first, fallback to regular user login
+    if (tab === 'login') {
+      try {
+        const res = await fetch(`${API}/admin/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: form.email, password: form.password }),
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+          const adminUser = data.user;
+          setUser(adminUser);
+          setToken(data.token);
+          localStorage.setItem('gamevault_user', JSON.stringify(adminUser));
+          localStorage.setItem('gamevault_token', data.token);
+          setPage('admin');
+          setLoading(false);
+          return;
+        }
+        // If admin login fails, try regular user login
+      } catch (err) {
+        // Continue to regular user login
+      }
     
     const url = tab === 'login' ? `${API}/users/login` : `${API}/users/register`;
     try {
@@ -79,7 +109,6 @@ export default function App() {
         const userData = data.user || data;
         setUser(userData);
         localStorage.setItem('gamevault_user', JSON.stringify(userData));
-        localStorage.setItem('gamevault_isAdmin', 'false');
         setPage('games');
       } else {
         setTab('login');
@@ -87,6 +116,7 @@ export default function App() {
       }
     } catch (err) { setError(err.message); }
     setLoading(false);
+    }
   };
 
   const userNavItems = [
@@ -162,7 +192,7 @@ export default function App() {
           <span className="brand-name">GAMEVAULT</span>
         </div>
         <div className="nav-links">
-          {(isAdmin ? adminNavItems : userNavItems).map(n => (
+          {(user?.isAdmin ? adminNavItems : userNavItems).map(n => (
             <button key={n.id} className={`nav-btn ${page === n.id ? 'active' : ''}`} onClick={() => setPage(n.id)}>
               {n.icon} {n.label}
             </button>
@@ -173,7 +203,7 @@ export default function App() {
             <div className="user-avatar">{user.fullName?.[0]?.toUpperCase() || 'U'}</div>
             {user.fullName}
           </div>
-          <button className="btn-logout" onClick={() => { setUser(null); setIsAdmin(false); setPage('games'); }}>Logout</button>
+          <button className="btn-logout" onClick={handleLogout}>Logout</button>
         </div>
       </nav>
       <div className="main">
@@ -181,12 +211,12 @@ export default function App() {
         {page === 'rent' && <RentGame user={user} />}
         {page === 'purchase' && <PurchaseGame user={user} />}
         {page === 'review' && <ReviewGame user={user} />}
-        {isAdmin && page === 'admin' && <AdminDashboard />}
-        {isAdmin && page === 'admin-users' && <AdminUsers />}
-        {isAdmin && page === 'admin-games' && <AdminGames />}
-        {isAdmin && page === 'admin-rentals' && <AdminRentals />}
-        {isAdmin && page === 'admin-transactions' && <AdminTransactions />}
-        {isAdmin && page === 'admin-membership' && <AdminMembership />}
+        {user?.isAdmin && page === 'admin' && <AdminDashboard />}
+        {user?.isAdmin && page === 'admin-users' && <AdminUsers />}
+        {user?.isAdmin && page === 'admin-games' && <AdminGames />}
+        {user?.isAdmin && page === 'admin-rentals' && <AdminRentals />}
+        {user?.isAdmin && page === 'admin-transactions' && <AdminTransactions />}
+        {user?.isAdmin && page === 'admin-membership' && <AdminMembership />}
       </div>
     </>
   );

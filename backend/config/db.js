@@ -18,6 +18,7 @@ const config = {
   password: process.env.DB_PASSWORD,
   server: 'localhost',
   database: process.env.DB_NAME,
+  port: parseInt(process.env.DB_PORT) || 1433,
   options: {
     instanceName: 'SQLEXPRESS',
     trustServerCertificate: true,

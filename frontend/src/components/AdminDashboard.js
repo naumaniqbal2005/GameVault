@@ -21,13 +21,21 @@ export default function AdminDashboard() {
   const loadStats = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API}/dashboard/stats`);
+      const token = localStorage.getItem('gamevault_token');
+      const res = await fetch(`${API}/dashboard/stats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to load dashboard stats');
+      }
       setStats(data);
       setError('');
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
-      setError('Failed to load dashboard stats');
+      setError(error.message || 'Failed to load dashboard stats');
     }
     setLoading(false);
   }, []);
