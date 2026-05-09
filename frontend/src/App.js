@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Waves from './component/Waves';
 import GameList from './components/GameList';
 import RentGame from './components/RentGame';
 import PurchaseGame from './components/PurchaseGame';
@@ -9,6 +10,10 @@ import AdminGames from './components/AdminGames';
 import AdminRentals from './components/AdminRentals';
 import AdminTransactions from './components/AdminTransactions';
 import AdminMembership from './components/AdminMembership';
+import DigitalWaitlist from './pages/Home/DigitalWaitlist';
+import PhysicalWaitlist from './pages/Home/PhysicalWaitlist';
+import PurchaseHistory from './pages/Home/PurchaseHistory';
+import UpcomingCatalogue from './pages/Home/UpcomingCatalogue';
 import './App.css';
 
 const API = 'http://localhost:5000/api';
@@ -124,6 +129,10 @@ export default function App() {
     { id: 'rent', label: 'Rent', icon: '⟳' },
     { id: 'purchase', label: 'Purchase', icon: '◉' },
     { id: 'review', label: 'Reviews', icon: '★' },
+    { id: 'digital-waitlist', label: 'Digital Waitlist', icon: '💿' },
+    { id: 'physical-waitlist', label: 'Physical Waitlist', icon: '📀' },
+    { id: 'purchase-history', label: 'Purchase History', icon: '📜' },
+    { id: 'upcoming-catalogue', label: 'Upcoming', icon: '🔮' },
   ];
 
   const adminNavItems = [
@@ -186,6 +195,19 @@ export default function App() {
 
   return (
     <>
+      <Waves
+        lineColor="#4c6b93"
+        backgroundColor="transparent"
+        waveSpeedX={0.02}
+        waveSpeedY={0.01}
+        waveAmpX={40}
+        waveAmpY={20}
+        friction={0.9}
+        tension={0.01}
+        maxCursorMove={120}
+        xGap={12}
+        yGap={36}
+      />
       <nav className="navbar">
         <div className="brand" onClick={() => setPage('games')}>
           <div className="brand-logo">🎮</div>
@@ -211,6 +233,10 @@ export default function App() {
         {page === 'rent' && <RentGame user={user} />}
         {page === 'purchase' && <PurchaseGame user={user} />}
         {page === 'review' && <ReviewGame user={user} />}
+        {page === 'digital-waitlist' && <DigitalWaitlist user={user} />}
+        {page === 'physical-waitlist' && <PhysicalWaitlist user={user} />}
+        {page === 'purchase-history' && <PurchaseHistory user={user} />}
+        {page === 'upcoming-catalogue' && <UpcomingCatalogue user={user} />}
         {user?.isAdmin && page === 'admin' && <AdminDashboard />}
         {user?.isAdmin && page === 'admin-users' && <AdminUsers />}
         {user?.isAdmin && page === 'admin-games' && <AdminGames />}
