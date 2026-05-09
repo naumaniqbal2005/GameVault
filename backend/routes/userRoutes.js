@@ -10,6 +10,8 @@ const {
     updateProfile,
     getAllUsers,
     deleteUser,
+    suspendUser,
+    unsuspendUser,
     validateRegister,
     validateLogin,
     validateUpdate
@@ -43,6 +45,12 @@ router.get('/', getAllUsers);
 
 // DELETE /users/:userId → Delete a user (admin-only)
 router.delete('/:userId', deleteUser);
+
+// PUT /users/:userId/suspend → Suspend a user (admin-only)
+router.put('/:userId/suspend', suspendUser);
+
+// PUT /users/:userId/unsuspend → Unsuspend a user (admin-only)
+router.put('/:userId/unsuspend', unsuspendUser);
 
 // Export router so it can be mounted in server.js or app.js
 module.exports = router;

@@ -2,12 +2,16 @@
 const Purchase = require('../models/Purchase');
 const Game = require('../models/Game');
 const Waitlist = require('../models/Waitlist');
+const Transaction = require('../models/Transaction');
 // Import validation helpers from express-validator
 const { body, validationResult } = require('express-validator');
 
 // Utility: generate a random PurchaseID
 // NOTE: In production you'd use auto-increment IDs or GUIDs instead
 const generatePurchaseId = () => Math.floor(Math.random() * 1000000) + 1;
+
+// Utility: generate a random TransactionID
+const generateTransactionId = () => Math.floor(Math.random() * 1000000) + 1;
 
 // ---------------------- Purchase Routes ----------------------
 
@@ -30,6 +34,10 @@ const purchaseGame = async (req, res) => {
 
         const game = copyInfo[0]; // Get game details for pricing
 
+        // Debug: Log the game info to check what data we're getting
+        console.log('Game info for purchase:', game);
+        console.log('PhysicalPrice:', game.PhysicalPrice);
+
         // Build purchase object
         const purchaseData = {
             PurchaseID: generatePurchaseId(),
@@ -41,6 +49,30 @@ const purchaseGame = async (req, res) => {
 
         // Insert into DB via model
         const newPurchase = await Purchase.create(purchaseData);
+        console.log('New purchase created:', newPurchase); // Debug log
+        console.log('PurchaseID:', newPurchase.PurchaseID); // Debug log
+
+        // Extract PurchaseID properly - it might be nested or in a different format
+        const purchaseId = newPurchase.PurchaseID || newPurchase.purchaseID || (newPurchase.recordset && newPurchase.recordset[0]?.PurchaseID);
+        console.log('Extracted PurchaseID:', purchaseId); // Debug log
+
+        // Create transaction record
+        const transactionAmount = game.PhysicalPrice || 0;
+        const transactionData = {
+            TransactionID: generateTransactionId(),
+            UserID: userId,
+            RentalID: null,
+            PurchaseID: purchaseId,
+            AdminID: adminId,
+            Amount: transactionAmount,
+            TransactionDate: new Date(),
+            DiscountApplied: 0.00
+        };
+
+        console.log('Creating transaction with PurchaseID:', purchaseId); // Debug log
+        console.log('Transaction data:', transactionData); // Debug log
+        await Transaction.create(transactionData);
+
         res.status(201).json({ 
             message: 'Game purchased successfully', 
             purchase: newPurchase,
@@ -154,6 +186,26 @@ const getGamePhysicalWaitlist = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+const getAllWaitlists = async (req, res) => {
+    try {
+        const waitlists = await Waitlist.getAllWaitlists();
+        res.json(waitlists);
+    } catch (error) {
+        console.error('Get all waitlists error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+const deleteWaitlist = async (req, res) => {
+    try {
+        const { waitlistId } = req.params;
+        
+        await Waitlist.removeFromPhysicalWaitlist(waitlistId);
+        res.json({ message: 'Waitlist entry deleted successfully' });
+    } catch (error) {
+        console.error('Delete waitlist error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
 
 // ---------------------- Validation Middleware ----------------------
 
@@ -179,6 +231,8 @@ module.exports = {
     joinPhysicalWaitlist,
     getUserPhysicalWaitlist,
     getGamePhysicalWaitlist,
+    deleteWaitlist,
+    getAllWaitlists,
     validatePurchaseGame,
     validateJoinPhysicalWaitlist
 };

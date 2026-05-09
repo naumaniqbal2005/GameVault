@@ -2,12 +2,16 @@
 const Rental = require('../models/Rental');
 const Game = require('../models/Game');
 const Waitlist = require('../models/Waitlist');
+const Transaction = require('../models/Transaction');
 // Import validation helpers from express-validator
 const { body, validationResult } = require('express-validator');
 
 // Utility: generate a random RentalID
 // NOTE: In production you'd use auto-increment IDs or GUIDs instead
 const generateRentalId = () => Math.floor(Math.random() * 1000000) + 1;
+
+// Utility: generate a random TransactionID
+const generateTransactionId = () => Math.floor(Math.random() * 1000000) + 1;
 
 // --------------- Rental Routes ------------------
 
@@ -55,6 +59,29 @@ const rentGame = async (req, res) => {
 
         // Insert into DB via model
         const newRental = await Rental.create(rentalData);
+        console.log('New rental created:', newRental); // Debug log
+        console.log('RentalID:', newRental.RentalID); // Debug log
+
+        // Extract RentalID properly - it might be nested or in a different format
+        const rentalId = newRental.RentalID || newRental.rentalID || (newRental.recordset && newRental.recordset[0]?.RentalID);
+        console.log('Extracted RentalID:', rentalId); // Debug log
+
+        // Create transaction record
+        const transactionData = {
+            TransactionID: generateTransactionId(),
+            UserID: userId,
+            RentalID: rentalId,
+            PurchaseID: null,
+            AdminID: 1, // Default admin ID - in production, get from authenticated admin
+            Amount: game.DigitalRentalPrice || 0,
+            TransactionDate: new Date(),
+            DiscountApplied: 0.00
+        };
+
+        console.log('Creating transaction with RentalID:', rentalId); // Debug log
+        console.log('Transaction data:', transactionData); // Debug log
+        await Transaction.create(transactionData);
+
         res.status(201).json({ 
             message: 'Game rented successfully', 
             rental: newRental,
@@ -229,6 +256,30 @@ const getGameWaitlist = async (req, res) => {
     }
 };
 
+// Controller: Get all digital waitlists (admin-only)
+const getAllWaitlists = async (req, res) => {
+    try {
+        const waitlists = await Waitlist.getAllWaitlists();
+        res.json(waitlists);
+    } catch (error) {
+        console.error('Get all waitlists error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+// Controller: Delete a waitlist entry
+const deleteWaitlist = async (req, res) => {
+    try {
+        const { waitlistId } = req.params;
+        
+        await Waitlist.removeFromDigitalWaitlist(waitlistId);
+        res.json({ message: 'Waitlist entry deleted successfully' });
+    } catch (error) {
+        console.error('Delete waitlist error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 // ---------------------- Validation Middleware ----------------------
 
 // Validation for renting a game
@@ -256,6 +307,8 @@ module.exports = {
     joinDigitalWaitlist,
     getUserWaitlist,
     getGameWaitlist,
+    deleteWaitlist,
+    getAllWaitlists,
     validateRentGame,
     validateJoinWaitlist
 };

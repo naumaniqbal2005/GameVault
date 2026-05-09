@@ -193,6 +193,72 @@ const deleteUser = async (req, res) => {
     }
 };
 
+// Controller: Suspend a user (admin-only)
+const suspendUser = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        // Check if user exists
+        const existingUser = await User.findById(userId);
+        if (!existingUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Update user status to Inactive while preserving other fields
+        const updated = await User.update(userId, { 
+            FullName: existingUser.FullName,
+            Email: existingUser.Email,
+            AccountStatus: 'Inactive' 
+        });
+        if (!updated) {
+            return res.status(400).json({ message: 'Failed to suspend user' });
+        }
+
+        // Fetch updated user to return
+        const updatedUser = await User.findById(userId);
+        res.json({ 
+            message: 'User suspended successfully', 
+            user: updatedUser 
+        });
+    } catch (error) {
+        console.error('Suspend user error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+// Controller: Unsuspend a user (admin-only)
+const unsuspendUser = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        // Check if user exists
+        const existingUser = await User.findById(userId);
+        if (!existingUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Update user status to Active while preserving other fields
+        const updated = await User.update(userId, { 
+            FullName: existingUser.FullName,
+            Email: existingUser.Email,
+            AccountStatus: 'Active' 
+        });
+        if (!updated) {
+            return res.status(400).json({ message: 'Failed to unsuspend user' });
+        }
+
+        // Fetch updated user to return
+        const updatedUser = await User.findById(userId);
+        res.json({ 
+            message: 'User unsuspended successfully', 
+            user: updatedUser 
+        });
+    } catch (error) {
+        console.error('Unsuspend user error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 // ---------------------- Validation Middleware ----------------------
 
 // Validation for registration
@@ -221,6 +287,8 @@ module.exports = {
     updateProfile,
     getAllUsers,
     deleteUser,
+    suspendUser,
+    unsuspendUser,
     validateRegister,
     validateLogin,
     validateUpdate

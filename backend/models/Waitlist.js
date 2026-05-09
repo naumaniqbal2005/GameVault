@@ -160,6 +160,27 @@ class Waitlist {
             throw error;
         }
     }
+
+    static async getAllWaitlists() {
+        try {
+            const pool = await poolPromise;
+            const result = await pool.request()
+                .query(`
+                    SELECT dw.WaitlistID, dw.UserID, u.FullName, dw.GameID, g.GameTitle, dw.RequestTime, 'Digital' AS WaitlistType
+                    FROM DigitalWaitlist dw
+                    JOIN Users u ON dw.UserID = u.UserID
+                    JOIN Games g ON dw.GameID = g.GameID
+                    UNION
+                    SELECT pw.WaitlistID, pw.UserID, u.FullName, pw.GameID, g.GameTitle, pw.RequestTime, 'Physical' AS WaitlistType
+                    FROM PhysicalWaitlist pw
+                    JOIN Users u ON pw.UserID = u.UserID
+                    JOIN Games g ON pw.GameID = g.GameID
+                `);
+            return result.recordset;
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 
 module.exports = Waitlist;
