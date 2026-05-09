@@ -14,9 +14,11 @@ const {
     joinDigitalWaitlist,
     getUserWaitlist,
     getGameWaitlist,
+    deleteWaitlist,
+    getAllWaitlists,
     validateRentGame,
     validateJoinWaitlist,
-    deleteWaitlist
+
 } = require('../controllers/rentalController');
 
 // ---------------------- Rental Routes ----------------------
@@ -63,6 +65,8 @@ router.get('/', getAllRentals);
 
 // GET /rental/overdue → Get overdue rentals (admin-only)
 router.get('/overdue', getOverdueRentals);
+
+router.get('/waitlist', getAllWaitlists);
 
 // Export router so it can be mounted in server.js or app.js
 module.exports = router;

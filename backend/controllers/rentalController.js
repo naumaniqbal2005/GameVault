@@ -256,6 +256,17 @@ const getGameWaitlist = async (req, res) => {
     }
 };
 
+// Controller: Get all digital waitlists (admin-only)
+const getAllWaitlists = async (req, res) => {
+    try {
+        const waitlists = await Waitlist.getAllWaitlists();
+        res.json(waitlists);
+    } catch (error) {
+        console.error('Get all waitlists error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 // Controller: Delete a waitlist entry
 const deleteWaitlist = async (req, res) => {
     try {
@@ -297,6 +308,7 @@ module.exports = {
     getUserWaitlist,
     getGameWaitlist,
     deleteWaitlist,
+    getAllWaitlists,
     validateRentGame,
     validateJoinWaitlist
 };

@@ -14,6 +14,8 @@ import DigitalWaitlist from './pages/Home/DigitalWaitlist';
 import PhysicalWaitlist from './pages/Home/PhysicalWaitlist';
 import PurchaseHistory from './pages/Home/PurchaseHistory';
 import UpcomingCatalogue from './pages/Home/UpcomingCatalogue';
+import AdminWaitlist from './components/AdminWaitlist';
+
 import './App.css';
 
 const API = 'http://localhost:5000/api';
@@ -143,6 +145,7 @@ export default function App() {
     { id: 'admin-rentals', label: 'Rentals', icon: '📋' },
     { id: 'admin-transactions', label: 'Transactions', icon: '💰' },
     { id: 'admin-membership', label: 'Membership', icon: '👑' },
+    { id: 'admin-wishlist', label: 'Waitlist', icon: '❤️' },
   ];
 
   if (!user) {
@@ -244,6 +247,7 @@ export default function App() {
         {user?.isAdmin && page === 'admin-rentals' && <AdminRentals />}
         {user?.isAdmin && page === 'admin-transactions' && <AdminTransactions />}
         {user?.isAdmin && page === 'admin-membership' && <AdminMembership />}
+        {user?.isAdmin && page === 'admin-wishlist' && <AdminWaitlist />}
       </div>
     </>
   );

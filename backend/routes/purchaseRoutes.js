@@ -12,6 +12,7 @@ const {
     getUserPhysicalWaitlist,
     getGamePhysicalWaitlist,
     deleteWaitlist,
+    getAllWaitlists,
     validatePurchaseGame,
     validateJoinPhysicalWaitlist
 } = require('../controllers/purchaseController');
@@ -50,6 +51,8 @@ router.delete('/waitlist/:waitlistId', deleteWaitlist);
 
 // GET /purchase → Get all purchases (admin-only)
 router.get('/', getAllPurchases);
+
+router.get('/waitlist', getAllWaitlists);
 
 // Export router so it can be mounted in server.js or app.js
 module.exports = router;

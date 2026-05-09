@@ -186,7 +186,15 @@ const getGamePhysicalWaitlist = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
-
+const getAllWaitlists = async (req, res) => {
+    try {
+        const waitlists = await Waitlist.getAllWaitlists();
+        res.json(waitlists);
+    } catch (error) {
+        console.error('Get all waitlists error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
 const deleteWaitlist = async (req, res) => {
     try {
         const { waitlistId } = req.params;
@@ -224,6 +232,7 @@ module.exports = {
     getUserPhysicalWaitlist,
     getGamePhysicalWaitlist,
     deleteWaitlist,
+    getAllWaitlists,
     validatePurchaseGame,
     validateJoinPhysicalWaitlist
 };
