@@ -10,9 +10,11 @@ A complete game rental and purchase management platform built using Node.js, Exp
 - **Physical Purchases**: Buy physical copies with real-time inventory management
 - **Reviews & Ratings**: Leave reviews with built-in rating validation
 - **Waitlist System**: Separate waitlists for both digital and physical availability
+- **Copy Management**: Create and manage physical/digital game copies independently
+- **Transaction Tracking**: Unified payment and rental history
+- **Admin Dashboard**: Centralized statistics and system overview
 - **Membership Tiers**: Tiered discount system for premium members
 - **Admin Functions**: Full admin dashboard with complete control
-- **Transaction Tracking**: Detailed payment and rental history
 
 ## 🏗️ Architecture
 
@@ -88,6 +90,10 @@ POST /api/users/register     - Register a new user
 POST /api/users/login        - Log in to an existing account
 GET  /api/users/profile/:id  - Fetch user profile
 PUT  /api/users/profile/:id  - Update user profile
+GET  /api/users              - List all users (admin)
+DELETE /api/users/:id        - Delete a user (admin)
+PUT  /api/users/:id/suspend  - Suspend a user (admin)
+PUT  /api/users/:id/unsuspend - Unsuspend a user (admin)
 ```
 
 ### Game Management
@@ -108,9 +114,13 @@ PUT    /api/rentals/return/:id         - Return a rented game
 DELETE /api/rentals/:id                - Remove rental record (admin)
 GET    /api/rentals/user/:id           - Get full rental history for a user
 GET    /api/rentals/user/:id/active    - Get currently active rentals
-GET    /api/rentals/stats              - Get rental statistics overview (admin)
+GET    /api/rentals                    - Get all rentals (admin)
+GET    /api/rentals/overdue            - Get overdue rentals (admin)
 POST   /api/rentals/waitlist/join      - Join the digital waitlist
 GET    /api/rentals/waitlist/user/:id  - View user waitlist entries
+GET    /api/rentals/waitlist/game/:id  - View game waitlist entries (admin)
+GET    /api/rentals/waitlist           - Get all waitlists (admin)
+DELETE /api/rentals/waitlist/:id       - Delete a waitlist entry
 ```
 
 ### Purchase System
@@ -118,7 +128,12 @@ GET    /api/rentals/waitlist/user/:id  - View user waitlist entries
 POST   /api/purchases/purchase        - Purchase a physical game
 GET    /api/purchases/user/:id        - Get purchase history for a user
 GET    /api/purchases/:id             - Fetch a specific purchase
+GET    /api/purchases                 - Get all purchases (admin)
 POST   /api/purchases/waitlist/join   - Join the physical waitlist
+GET    /api/purchases/waitlist/user/:id  - View user physical waitlist
+GET    /api/purchases/waitlist/game/:id  - View game physical waitlist (admin)
+GET    /api/purchases/waitlist       - Get all physical waitlists (admin)
+DELETE /api/purchases/waitlist/:id    - Delete a waitlist entry
 ```
 
 ### Reviews
@@ -126,9 +141,11 @@ POST   /api/purchases/waitlist/join   - Join the physical waitlist
 POST   /api/reviews                            - Submit a review
 GET    /api/reviews/game/:id                   - Get all reviews for a game
 GET    /api/reviews/user/:id                   - Get all reviews by a user
+GET    /api/reviews/review/:id                 - Get a single review by ID
 PUT    /api/reviews/review/:id                 - Edit a review
 DELETE /api/reviews/review/:id                 - Delete a review
 GET    /api/reviews/can-review/:userId/:gameId - Check review eligibility
+GET    /api/reviews                            - Get all reviews (admin)
 ```
 
 ### Categories
@@ -140,13 +157,41 @@ PUT    /api/categories/:id  - Update a category (admin)
 DELETE /api/categories/:id  - Delete a category (admin)
 ```
 
+### Copy Management
+```
+POST   /api/physical-copies              - Create a new physical copy (admin)
+GET    /api/physical-copies/game/:id     - Get physical copies for a game
+POST   /api/digital-copies               - Create a new digital copy (admin)
+GET    /api/digital-copies/game/:id      - Get digital copies for a game
+```
+
+### Transactions
+```
+GET    /api/transactions                 - Get all transactions (admin)
+GET    /api/transactions/:id             - Get a specific transaction
+GET    /api/transactions/user/:id        - Get transactions for a user
+GET    /api/transactions/rentals         - Get rental transactions
+GET    /api/transactions/purchases       - Get purchase transactions
+```
+
+### Admin & Dashboard
+```
+POST   /api/admin/login                  - Admin login
+GET    /api/admin/verify                 - Verify admin token
+GET    /api/dashboard/stats            - Get dashboard statistics
+```
+
 ### Memberships
 ```
 GET    /api/memberships/tiers              - View all membership tiers
+GET    /api/memberships/tiers/:id          - View a single tier
 GET    /api/memberships/user/:id           - Get a user's active membership
 GET    /api/memberships/user/:id/history   - View membership history
+POST   /api/memberships/tiers              - Create a new tier (admin)
 POST   /api/memberships/user               - Assign a membership to a user
 PUT    /api/memberships/:id/status         - Update membership status
+GET    /api/memberships                    - Get all user memberships (admin)
+DELETE /api/memberships/:id                - Delete a membership (admin)
 ```
 
 ## 📊 Database Schema
@@ -195,7 +240,10 @@ GameVault/
 │   │   ├── purchaseController.js
 │   │   ├── reviewController.js
 │   │   ├── categoryController.js
-│   │   └── membershipController.js
+│   │   ├── membershipController.js
+│   │   ├── transactionController.js
+│   │   ├── dashboardController.js
+│   │   └── adminController.js
 │   ├── models/
 │   │   ├── User.js
 │   │   ├── Game.js
@@ -204,7 +252,12 @@ GameVault/
 │   │   ├── Review.js
 │   │   ├── Category.js
 │   │   ├── Membership.js
-│   │   └── Admin.js
+│   │   ├── Admin.js
+│   │   ├── Waitlist.js
+│   │   ├── Transaction.js
+│   │   ├── PhysicalCopies.js
+│   │   ├── DigitalCopies.js
+│   │   └── Notification.js
 │   ├── routes/
 │   │   ├── userRoutes.js
 │   │   ├── gameRoutes.js
@@ -212,15 +265,29 @@ GameVault/
 │   │   ├── purchaseRoutes.js
 │   │   ├── reviewRoutes.js
 │   │   ├── categoryRoutes.js
-│   │   └── membershipRoutes.js
+│   │   ├── membershipRoutes.js
+│   │   ├── physicalCopyRoutes.js
+│   │   ├── digitalCopyRoutes.js
+│   │   ├── transactionRoutes.js
+│   │   ├── dashboardRoutes.js
+│   │   └── adminRoutes.js
+│   ├── middleware/
+│   │   └── auth.js
 │   ├── .env
 │   ├── package.json
 │   └── server.js
 ├── frontend/
 │   ├── src/
+│   │   ├── components/
+│   │   │   ├── AdminWaitlist.js
+│   │   │   ├── AdminUsers.js
+│   │   │   ├── AdminWishlist.js
+│   │   │   └── ...
+│   │   └── App.js
 │   ├── public/
 │   └── package.json
-└── gamevault-db.sql
+├── gamevault-db.sql
+└── README.md
 ```
 
 ## 🧪 Testing with Postman
