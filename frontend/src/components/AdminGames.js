@@ -1,20 +1,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 const API = 'http://localhost:5000/api';
-const BANNERS = ['banner-1','banner-2','banner-3','banner-4','banner-5'];
-const EMOJIS  = ['⚔️','🐉','🏆','🔫','🚀','🌌','👾','🎯','🛡️','🌊'];
+const BANNERS = ['banner-1', 'banner-2', 'banner-3', 'banner-4', 'banner-5'];
+const EMOJIS = ['⚔️', '🐉', '🏆', '🔫', '🚀', '🌌', '👾', '🎯', '🛡️', '🌊'];
 
 const COVERS = {
-  'God of War':                  'https://images.wallpapersden.com/image/download/atreus-kratos-god-of-war-2018_a2ZrZm2UmZqaraWkpJRmbmdlrWZlbWU.jpg',
-  'Elden Ring':                  'https://tse3.mm.bing.net/th/id/OIP.P0-K3kdmGjRLYCWhGNruUwHaEK?rs=1&pid=ImgDetMain&o=7&rm=3',
-  'FIFA 24':                     'https://tse2.mm.bing.net/th/id/OIP.xr0SfoLYUDm-pAMG-gkADgHaEK?rs=1&pid=ImgDetMain&o=7&rm=3',
-  'Spider-Man 2':                'https://i.gadgets360cdn.com/products/large/spider-man-2-poster-1543x2160-1686288382.jpg',
-  'Cyberpunk 2077':              'https://cdn1.epicgames.com/offer/77f2b98e2cef40c8a7437518bf420e47/EGS_Cyberpunk2077_CDPROJEKTRED_S1_03_2560x1440-359e77d3cd0a40aebf3bbc130d14c5c7',
-  'Hollow Knight':               'https://gaming-cdn.com/images/products/2198/orig-fallback-v1/hollow-knight-pc-mac-game-steam-cover.jpg?v=1705490619',
-  'Resident Evil 4':             'https://cdn.wccftech.com/wp-content/uploads/2023/02/WCCFresidentevil4remake14.jpg',
-  'The Witcher 3':               'https://tse4.mm.bing.net/th/id/OIP.G8AqB-jB4rGrjl8ToU0cywHaEK?rs=1&pid=ImgDetMain&o=7&rm=3',
-  'Zelda Tears of the Kingdom':  'https://zeldacentral.com/wp-content/uploads/2025/03/Tears-of-the-Kingdom-wallpaper.jpg',
-  'Halo Infinite':               'https://gamingbolt.com/wp-content/uploads/2020/07/halo-infinite.jpg',
+  'God of War': 'https://images.wallpapersden.com/image/download/atreus-kratos-god-of-war-2018_a2ZrZm2UmZqaraWkpJRmbmdlrWZlbWU.jpg',
+  'Elden Ring': 'https://tse3.mm.bing.net/th/id/OIP.P0-K3kdmGjRLYCWhGNruUwHaEK?rs=1&pid=ImgDetMain&o=7&rm=3',
+  'FIFA 24': 'https://tse2.mm.bing.net/th/id/OIP.xr0SfoLYUDm-pAMG-gkADgHaEK?rs=1&pid=ImgDetMain&o=7&rm=3',
+  'Spider-Man 2': 'https://i.gadgets360cdn.com/products/large/spider-man-2-poster-1543x2160-1686288382.jpg',
+  'Cyberpunk 2077': 'https://cdn1.epicgames.com/offer/77f2b98e2cef40c8a7437518bf420e47/EGS_Cyberpunk2077_CDPROJEKTRED_S1_03_2560x1440-359e77d3cd0a40aebf3bbc130d14c5c7',
+  'Hollow Knight': 'https://gaming-cdn.com/images/products/2198/orig-fallback-v1/hollow-knight-pc-mac-game-steam-cover.jpg?v=1705490619',
+  'Resident Evil 4': 'https://cdn.wccftech.com/wp-content/uploads/2023/02/WCCFresidentevil4remake14.jpg',
+  'The Witcher 3': 'https://tse4.mm.bing.net/th/id/OIP.G8AqB-jB4rGrjl8ToU0cywHaEK?rs=1&pid=ImgDetMain&o=7&rm=3',
+  'Zelda Tears of the Kingdom': 'https://zeldacentral.com/wp-content/uploads/2025/03/Tears-of-the-Kingdom-wallpaper.jpg',
+  'Halo Infinite': 'https://gamingbolt.com/wp-content/uploads/2020/07/halo-infinite.jpg',
 };
 
 export default function AdminGames() {
@@ -47,8 +47,9 @@ export default function AdminGames() {
     } catch { setGames([]); }
     setLoading(false);
   }, [search]);
-
+  //the function is recreated again as the search variables changes
   useEffect(() => { fetchGames(); }, [search, fetchGames]);
+  //adding search in the useeffect is redundant since the change in fetchgames function due to search variable would already trigger the useeffect
 
   const fetchGameByTitle = async (title) => {
     try {
@@ -77,15 +78,15 @@ export default function AdminGames() {
         digitalRentalPrice: form.digitalRentalPrice ? parseFloat(form.digitalRentalPrice) : undefined,
         physicalPrice: form.physicalPrice ? parseFloat(form.physicalPrice) : undefined
       };
-      
+
       console.log('Creating game with data:', gameRequestData);
-      
+
       const gameRes = await fetch(`${API}/games`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(gameRequestData),
       });
-      
+
       console.log('Game creation response status:', gameRes.status);
       const gameData = await gameRes.json();
       console.log('Game creation response data:', gameData);
@@ -96,16 +97,16 @@ export default function AdminGames() {
         }
         throw new Error(gameData.message || 'Failed to add game');
       }
-      
+
       // Fetch the newly created game by title to get its ID
       console.log('Fetching game ID for title:', form.gameTitle);
       const newGameId = await fetchGameByTitle(form.gameTitle);
       console.log('Retrieved game ID:', newGameId, 'Type:', typeof newGameId);
-      
+
       if (!newGameId) {
         throw new Error('Failed to retrieve game ID after creation');
       }
-      
+
       // Create physical copies if specified
       let physicalCopiesCreated = 0;
       if (form.physicalCopies && parseInt(form.physicalCopies) > 0) {
@@ -137,7 +138,7 @@ export default function AdminGames() {
           }
         }
       }
-      
+
       // Create digital copies if specified
       let digitalCopiesCreated = 0;
       if (form.digitalCopies && parseInt(form.digitalCopies) > 0) {
@@ -146,15 +147,15 @@ export default function AdminGames() {
         for (let i = 0; i < copyCount; i++) {
           try {
             const requestData = {
-                gameId: newGameId,
-                availability: form.digitalAvailability
-              };
-              console.log('Sending digital copy request:', requestData);
-              const copyRes = await fetch(`${API}/digital-copies`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestData),
-              });
+              gameId: newGameId,
+              availability: form.digitalAvailability
+            };
+            console.log('Sending digital copy request:', requestData);
+            const copyRes = await fetch(`${API}/digital-copies`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(requestData),
+            });
             if (copyRes.ok) {
               digitalCopiesCreated++;
               console.log('Digital copy', i + 1, 'created successfully');
@@ -170,13 +171,13 @@ export default function AdminGames() {
           }
         }
       }
-      
+
       setMsg({ type: 'success', text: `✓ Game added successfully with ${physicalCopiesCreated} physical and ${digitalCopiesCreated} digital copies!` });
-      setForm({ 
-        gameTitle: '', 
-        platform: '', 
-        genre: '', 
-        digitalRentalPrice: '', 
+      setForm({
+        gameTitle: '',
+        platform: '',
+        genre: '',
+        digitalRentalPrice: '',
         physicalPrice: '',
         physicalCopies: '',
         physicalCondition: 'Good',
@@ -225,35 +226,35 @@ export default function AdminGames() {
           <div className="auth-title">ADD NEW GAME</div>
           <div className="auth-sub">Enter game details to add to inventory</div>
           {msg.text && <div className={`alert ${msg.type === 'success' ? 'alert-success' : 'alert-error'}`}>{msg.text}</div>}
-          
+
           <form onSubmit={handleAddGame}>
             <div className="form-group">
               <label className="form-label">Game Title *</label>
-              <input 
-                className="form-input" 
-                placeholder="Enter game title" 
+              <input
+                className="form-input"
+                placeholder="Enter game title"
                 value={form.gameTitle}
                 onChange={e => setForm({ ...form, gameTitle: e.target.value })}
-                required 
+                required
               />
             </div>
 
             <div className="form-group">
               <label className="form-label">Platform *</label>
-              <input 
-                className="form-input" 
-                placeholder="e.g., PC, PlayStation, Xbox, Nintendo Switch" 
+              <input
+                className="form-input"
+                placeholder="e.g., PC, PlayStation, Xbox, Nintendo Switch"
                 value={form.platform}
                 onChange={e => setForm({ ...form, platform: e.target.value })}
-                required 
+                required
               />
             </div>
 
             <div className="form-group">
               <label className="form-label">Genre</label>
-              <input 
-                className="form-input" 
-                placeholder="e.g., Action, RPG, Strategy, Sports" 
+              <input
+                className="form-input"
+                placeholder="e.g., Action, RPG, Strategy, Sports"
                 value={form.genre}
                 onChange={e => setForm({ ...form, genre: e.target.value })}
               />
@@ -261,12 +262,12 @@ export default function AdminGames() {
 
             <div className="form-group">
               <label className="form-label">Digital Rental Price (per day)</label>
-              <input 
-                className="form-input" 
-                type="number" 
-                step="0.01" 
+              <input
+                className="form-input"
+                type="number"
+                step="0.01"
                 min="0"
-                placeholder="0.00" 
+                placeholder="0.00"
                 value={form.digitalRentalPrice}
                 onChange={e => setForm({ ...form, digitalRentalPrice: e.target.value })}
               />
@@ -274,12 +275,12 @@ export default function AdminGames() {
 
             <div className="form-group">
               <label className="form-label">Physical Purchase Price</label>
-              <input 
-                className="form-input" 
-                type="number" 
-                step="0.01" 
+              <input
+                className="form-input"
+                type="number"
+                step="0.01"
                 min="0"
-                placeholder="0.00" 
+                placeholder="0.00"
                 value={form.physicalPrice}
                 onChange={e => setForm({ ...form, physicalPrice: e.target.value })}
               />
@@ -287,11 +288,11 @@ export default function AdminGames() {
 
             <div className="form-group">
               <label className="form-label">Number of Physical Copies</label>
-              <input 
-                className="form-input" 
-                type="number" 
+              <input
+                className="form-input"
+                type="number"
                 min="0"
-                placeholder="0" 
+                placeholder="0"
                 value={form.physicalCopies}
                 onChange={e => setForm({ ...form, physicalCopies: e.target.value })}
               />
@@ -300,8 +301,8 @@ export default function AdminGames() {
             {form.physicalCopies && parseInt(form.physicalCopies) > 0 && (
               <div className="form-group">
                 <label className="form-label">Physical Copy Condition</label>
-                <select 
-                  className="form-input" 
+                <select
+                  className="form-input"
                   value={form.physicalCondition}
                   onChange={e => setForm({ ...form, physicalCondition: e.target.value })}
                 >
@@ -315,11 +316,11 @@ export default function AdminGames() {
 
             <div className="form-group">
               <label className="form-label">Number of Digital Copies</label>
-              <input 
-                className="form-input" 
-                type="number" 
+              <input
+                className="form-input"
+                type="number"
                 min="0"
-                placeholder="0" 
+                placeholder="0"
                 value={form.digitalCopies}
                 onChange={e => setForm({ ...form, digitalCopies: e.target.value })}
               />
@@ -328,8 +329,8 @@ export default function AdminGames() {
             {form.digitalCopies && parseInt(form.digitalCopies) > 0 && (
               <div className="form-group">
                 <label className="form-label">Digital Copy Availability</label>
-                <select 
-                  className="form-input" 
+                <select
+                  className="form-input"
                   value={form.digitalAvailability}
                   onChange={e => setForm({ ...form, digitalAvailability: e.target.value })}
                 >
@@ -341,17 +342,17 @@ export default function AdminGames() {
             )}
 
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.5rem' }}>
-              <button 
-                type="submit" 
-                className="btn btn-cyan" 
+              <button
+                type="submit"
+                className="btn btn-cyan"
                 disabled={submitting}
                 style={{ flex: 1 }}
               >
                 {submitting ? 'Adding Game...' : 'Add Game'}
               </button>
-              <button 
-                type="button" 
-                className="btn btn-ghost" 
+              <button
+                type="button"
+                className="btn btn-ghost"
                 onClick={() => setShowAddForm(false)}
                 disabled={submitting}
               >

@@ -10,7 +10,7 @@ export default function AdminMembership() {
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
-  
+
   const [form, setForm] = useState({
     userId: '',
     tierId: '',
@@ -54,16 +54,21 @@ export default function AdminMembership() {
       setUsers([]);
     }
   }, []);
+  //empty depencendy array meaning only created once on component mount, and never created again
 
   useEffect(() => {
     loadMemberships();
     loadTiers();
     loadUsers();
   }, [loadMemberships, loadTiers, loadUsers]);
+  //checks the if the functions have changed which would be the case if they had something in their dependencies, 
+  //in this case they don't, otherwise it noticing the change it calls on the latest created versions or calls the function again to have the updated values
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!form.userId || !form.tierId || !form.startDate || !form.endDate) {
       alert('Please fill all fields');
       return;
@@ -80,7 +85,7 @@ export default function AdminMembership() {
           endDate: form.endDate
         })
       });
-      
+
       if (res.ok) {
         setShowForm(false);
         setForm({ userId: '', tierId: '', startDate: '', endDate: '' });
@@ -102,7 +107,7 @@ export default function AdminMembership() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
       });
-      
+
       if (res.ok) {
         loadMemberships();
       } else {
@@ -124,7 +129,7 @@ export default function AdminMembership() {
       const res = await fetch(`${API}/memberships/${membershipId}`, {
         method: 'DELETE'
       });
-      
+
       if (res.ok) {
         loadMemberships();
       } else {
@@ -153,11 +158,11 @@ export default function AdminMembership() {
   };
 
   const filteredMemberships = memberships.filter(membership => {
-    const matchesSearch = !search || 
+    const matchesSearch = !search ||
       getUserName(membership.UserID)?.toLowerCase().includes(search.toLowerCase()) ||
       getTierName(membership.TierID)?.toLowerCase().includes(search.toLowerCase()) ||
       membership.Status?.toLowerCase().includes(search.toLowerCase());
-    
+
     return matchesSearch;
   }).sort((a, b) => b.MembershipID - a.MembershipID);
 
@@ -209,30 +214,30 @@ export default function AdminMembership() {
       <div className="search-bar">
         <div className="search-wrap">
           <span className="search-icon">🔍</span>
-          <input 
-            className="search-input" 
-            placeholder="Search memberships by user, tier, or status..." 
+          <input
+            className="search-input"
+            placeholder="Search memberships by user, tier, or status..."
             value={search}
-            onChange={e => setSearch(e.target.value)} 
+            onChange={e => setSearch(e.target.value)}
           />
         </div>
         {search && <button className="btn btn-ghost btn-sm" onClick={() => setSearch('')}>Clear</button>}
       </div>
 
       {showForm && (
-        <div style={{ 
-          background: 'var(--card)', 
-          border: '1px solid var(--border)', 
-          borderRadius: 'var(--radius)', 
-          padding: '24px', 
-          marginBottom: '20px' 
+        <div style={{
+          background: 'var(--card)',
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--radius)',
+          padding: '24px',
+          marginBottom: '20px'
         }}>
           <h3 style={{ marginBottom: '20px', color: 'var(--text)' }}>Add New Membership</h3>
           <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <div className="form-group">
               <label className="form-label">User</label>
-              <select 
-                className="form-input" 
+              <select
+                className="form-input"
                 value={form.userId}
                 onChange={e => setForm({ ...form, userId: e.target.value })}
                 required
@@ -248,8 +253,8 @@ export default function AdminMembership() {
 
             <div className="form-group">
               <label className="form-label">Membership Tier</label>
-              <select 
-                className="form-input" 
+              <select
+                className="form-input"
                 value={form.tierId}
                 onChange={e => setForm({ ...form, tierId: e.target.value })}
                 required
@@ -265,9 +270,9 @@ export default function AdminMembership() {
 
             <div className="form-group">
               <label className="form-label">Start Date</label>
-              <input 
-                className="form-input" 
-                type="date" 
+              <input
+                className="form-input"
+                type="date"
                 value={form.startDate}
                 onChange={e => setForm({ ...form, startDate: e.target.value })}
                 required
@@ -276,9 +281,9 @@ export default function AdminMembership() {
 
             <div className="form-group">
               <label className="form-label">End Date</label>
-              <input 
-                className="form-input" 
-                type="date" 
+              <input
+                className="form-input"
+                type="date"
                 value={form.endDate}
                 onChange={e => setForm({ ...form, endDate: e.target.value })}
                 required
@@ -296,24 +301,24 @@ export default function AdminMembership() {
           </form>
         </div>
       )}
-      
+
       {filteredMemberships.length === 0 ? (
         <div className="empty">
           <div className="empty-icon">👑</div>
           <p>{search ? 'No memberships match your search' : 'No memberships found'}</p>
         </div>
       ) : (
-        <div style={{ 
-          background: 'var(--card)', 
-          borderRadius: 'var(--radius)', 
+        <div style={{
+          background: 'var(--card)',
+          borderRadius: 'var(--radius)',
           overflow: 'hidden',
           border: '1px solid var(--border)',
           boxShadow: 'var(--cyan-glow)'
         }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ 
-                background: 'linear-gradient(135deg, var(--cyan), var(--purple))', 
+              <tr style={{
+                background: 'linear-gradient(135deg, var(--cyan), var(--purple))',
                 color: 'var(--text)',
                 fontFamily: 'Orbitron, monospace'
               }}>
@@ -328,7 +333,7 @@ export default function AdminMembership() {
             </thead>
             <tbody>
               {filteredMemberships.map((membership, index) => (
-                <tr key={membership.MembershipID} style={{ 
+                <tr key={membership.MembershipID} style={{
                   borderBottom: '1px solid var(--border2)',
                   background: index % 2 === 0 ? 'var(--card2)' : 'var(--card)',
                   transition: 'all 0.3s',
@@ -337,9 +342,9 @@ export default function AdminMembership() {
                   <td style={{ padding: '16px', fontSize: '15px', fontWeight: '600', color: 'var(--cyan)' }}>#{membership.MembershipID}</td>
                   <td style={{ padding: '16px', fontSize: '15px', color: 'var(--text)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{ 
-                        width: '32px', 
-                        height: '32px', 
+                      <div style={{
+                        width: '32px',
+                        height: '32px',
                         borderRadius: '50%',
                         background: 'linear-gradient(135deg, var(--cyan), var(--purple))',
                         color: 'var(--bg)',
@@ -358,7 +363,7 @@ export default function AdminMembership() {
                   </td>
                   <td style={{ padding: '16px', fontSize: '15px', color: 'var(--text)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ 
+                      <span style={{
                         padding: '6px 14px',
                         borderRadius: '20px',
                         fontSize: '12px',
@@ -381,21 +386,21 @@ export default function AdminMembership() {
                     {formatDate(membership.EndDate)}
                   </td>
                   <td style={{ padding: '16px' }}>
-                    <span style={{ 
+                    <span style={{
                       padding: '6px 14px',
                       borderRadius: '20px',
                       fontSize: '12px',
                       fontWeight: '700',
                       fontFamily: 'Orbitron, monospace',
                       letterSpacing: '1px',
-                      background: membership.Status === 'Active' ? 'var(--green-dim)' : 
-                                  membership.Status === 'Expired' ? 'var(--orange-dim)' : 'rgba(220,53,69,0.12)',
-                      color: membership.Status === 'Active' ? 'var(--green)' : 
-                             membership.Status === 'Expired' ? 'var(--orange)' : '#DC3545',
-                      border: membership.Status === 'Active' ? '1px solid var(--green)' : 
-                             membership.Status === 'Expired' ? '1px solid var(--orange)' : '1px solid #DC3545',
-                      boxShadow: membership.Status === 'Active' ? '0 0 10px rgba(0,255,136,0.3)' : 
-                                membership.Status === 'Expired' ? '0 0 10px rgba(255,107,0,0.3)' : '0 0 10px rgba(220,53,69,0.3)'
+                      background: membership.Status === 'Active' ? 'var(--green-dim)' :
+                        membership.Status === 'Expired' ? 'var(--orange-dim)' : 'rgba(220,53,69,0.12)',
+                      color: membership.Status === 'Active' ? 'var(--green)' :
+                        membership.Status === 'Expired' ? 'var(--orange)' : '#DC3545',
+                      border: membership.Status === 'Active' ? '1px solid var(--green)' :
+                        membership.Status === 'Expired' ? '1px solid var(--orange)' : '1px solid #DC3545',
+                      boxShadow: membership.Status === 'Active' ? '0 0 10px rgba(0,255,136,0.3)' :
+                        membership.Status === 'Expired' ? '0 0 10px rgba(255,107,0,0.3)' : '0 0 10px rgba(220,53,69,0.3)'
                     }}>
                       {membership.Status}
                     </span>
@@ -403,7 +408,7 @@ export default function AdminMembership() {
                   <td style={{ padding: '16px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {membership.Status === 'Active' && (
-                        <button 
+                        <button
                           onClick={() => handleStatusUpdate(membership.MembershipID, 'Expired')}
                           className="btn btn-sm"
                           style={{
@@ -420,7 +425,7 @@ export default function AdminMembership() {
                         </button>
                       )}
                       {membership.Status !== 'Cancelled' && (
-                        <button 
+                        <button
                           onClick={() => handleStatusUpdate(membership.MembershipID, 'Cancelled')}
                           className="btn btn-sm"
                           style={{
@@ -437,7 +442,7 @@ export default function AdminMembership() {
                         </button>
                       )}
                       {membership.Status === 'Cancelled' && (
-                        <button 
+                        <button
                           onClick={() => handleDeleteMembership(membership.MembershipID)}
                           className="btn btn-sm"
                           style={{
