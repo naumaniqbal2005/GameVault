@@ -36,9 +36,9 @@ const register = async (req, res) => {
 
         // Insert into DB via model
         const newUser = await User.create(userData);
-        res.status(201).json({ 
-            message: 'User registered successfully', 
-            user: newUser 
+        res.status(201).json({
+            message: 'User registered successfully',
+            user: newUser
         });
     } catch (error) {
         console.error('Registration error:', error);
@@ -72,8 +72,8 @@ const login = async (req, res) => {
         }
 
         // In production, generate JWT token here
-        res.json({ 
-            message: 'Login successful', 
+        res.json({
+            message: 'Login successful',
             user: {
                 UserID: user.UserID,
                 FullName: user.FullName,
@@ -93,15 +93,15 @@ const login = async (req, res) => {
 const getProfile = async (req, res) => {
     try {
         const { userId } = req.params;
-        
+
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        res.json({ 
-            message: 'User profile retrieved successfully', 
-            user: user 
+        res.json({
+            message: 'User profile retrieved successfully',
+            user: user
         });
     } catch (error) {
         console.error('Get profile error:', error);
@@ -150,9 +150,9 @@ const updateProfile = async (req, res) => {
 
         // Fetch updated user to return
         const updatedUser = await User.findById(userId);
-        res.json({ 
-            message: 'Profile updated successfully', 
-            user: updatedUser 
+        res.json({
+            message: 'Profile updated successfully',
+            user: updatedUser
         });
     } catch (error) {
         console.error('Update profile error:', error);
@@ -166,9 +166,9 @@ const updateProfile = async (req, res) => {
 const getAllUsers = async (req, res) => {
     try {
         const users = await User.getAll();
-        res.json({ 
-            message: 'All users retrieved successfully', 
-            users: users 
+        res.json({
+            message: 'All users retrieved successfully',
+            users: users
         });
     } catch (error) {
         console.error('Get all users error:', error);
@@ -180,7 +180,7 @@ const getAllUsers = async (req, res) => {
 const deleteUser = async (req, res) => {
     try {
         const { userId } = req.params;
-        
+
         const deleted = await User.delete(userId);
         if (!deleted) {
             return res.status(404).json({ message: 'User not found' });
@@ -197,7 +197,7 @@ const deleteUser = async (req, res) => {
 const suspendUser = async (req, res) => {
     try {
         const { userId } = req.params;
-        
+
         // Check if user exists
         const existingUser = await User.findById(userId);
         if (!existingUser) {
@@ -205,10 +205,10 @@ const suspendUser = async (req, res) => {
         }
 
         // Update user status to Inactive while preserving other fields
-        const updated = await User.update(userId, { 
+        const updated = await User.update(userId, {
             FullName: existingUser.FullName,
             Email: existingUser.Email,
-            AccountStatus: 'Inactive' 
+            AccountStatus: 'Inactive'
         });
         if (!updated) {
             return res.status(400).json({ message: 'Failed to suspend user' });
@@ -216,9 +216,9 @@ const suspendUser = async (req, res) => {
 
         // Fetch updated user to return
         const updatedUser = await User.findById(userId);
-        res.json({ 
-            message: 'User suspended successfully', 
-            user: updatedUser 
+        res.json({
+            message: 'User suspended successfully',
+            user: updatedUser
         });
     } catch (error) {
         console.error('Suspend user error:', error);
@@ -230,7 +230,7 @@ const suspendUser = async (req, res) => {
 const unsuspendUser = async (req, res) => {
     try {
         const { userId } = req.params;
-        
+
         // Check if user exists
         const existingUser = await User.findById(userId);
         if (!existingUser) {
@@ -238,10 +238,10 @@ const unsuspendUser = async (req, res) => {
         }
 
         // Update user status to Active while preserving other fields
-        const updated = await User.update(userId, { 
+        const updated = await User.update(userId, {
             FullName: existingUser.FullName,
             Email: existingUser.Email,
-            AccountStatus: 'Active' 
+            AccountStatus: 'Active'
         });
         if (!updated) {
             return res.status(400).json({ message: 'Failed to unsuspend user' });
@@ -249,9 +249,9 @@ const unsuspendUser = async (req, res) => {
 
         // Fetch updated user to return
         const updatedUser = await User.findById(userId);
-        res.json({ 
-            message: 'User unsuspended successfully', 
-            user: updatedUser 
+        res.json({
+            message: 'User unsuspended successfully',
+            user: updatedUser
         });
     } catch (error) {
         console.error('Unsuspend user error:', error);

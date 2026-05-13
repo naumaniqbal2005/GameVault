@@ -4,6 +4,8 @@ const Admin = require('../models/Admin');
 const bcrypt = require('bcryptjs');
 const { JWT_SECRET } = require('../middleware/auth');
 const jwt = require('jsonwebtoken');
+const { verifyToken, verifyAdmin } = require('../middleware/auth');
+
 
 // Admin login endpoint
 router.post('/login', async (req, res) => {
@@ -31,9 +33,9 @@ router.post('/login', async (req, res) => {
 
     // Create JWT token
     const token = jwt.sign(
-      { 
+      {
         adminId: admin.AdminID,
-        email: admin.Email, 
+        email: admin.Email,
         isAdmin: true,
         fullName: admin.FullName,
         accessLevel: admin.AccessLevel
@@ -58,31 +60,15 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Verify admin token endpoint
-router.get('/verify', (req, res) => {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
-  
-  if (!token) {
-    return res.status(401).json({ error: 'No token provided' });
-  }
-
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    if (!decoded.isAdmin) {
-      return res.status(403).json({ error: 'Not an admin user' });
+router.get('/verify', verifyToken, verifyAdmin, (req, res) => {
+  res.json({
+    valid: true,
+    user: {
+      fullName: req.user.fullName,
+      email: req.user.email,
+      isAdmin: req.user.isAdmin
     }
-    
-    res.json({ 
-      valid: true, 
-      user: {
-        fullName: decoded.fullName,
-        email: decoded.email,
-        isAdmin: decoded.isAdmin
-      }
-    });
-  } catch (error) {
-    res.status(401).json({ error: 'Invalid token' });
-  }
+  });
 });
 
 module.exports = router;
