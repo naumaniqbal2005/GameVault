@@ -78,8 +78,8 @@ export default function App() {
   const handleAuth = async (e) => {
     e.preventDefault();
     setError(''); setLoading(true);
-    
-    // Check for admin access - try admin login first, fallback to regular user login
+
+    // Try admin login first (only on login tab)
     if (tab === 'login') {
       try {
         const res = await fetch(`${API}/admin/login`, {
@@ -88,7 +88,7 @@ export default function App() {
           body: JSON.stringify({ email: form.email, password: form.password }),
         });
         const data = await res.json();
-        
+
         if (res.ok) {
           const adminUser = data.user;
           setUser(adminUser);
@@ -99,11 +99,12 @@ export default function App() {
           setLoading(false);
           return;
         }
-        // If admin login fails, try regular user login
       } catch (err) {
-        // Continue to regular user login
+        // Not an admin, fall through to regular login
       }
-    
+    }
+
+    // Regular user login or register
     const url = tab === 'login' ? `${API}/users/login` : `${API}/users/register`;
     try {
       const res = await fetch(url, {
@@ -113,6 +114,7 @@ export default function App() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || data.error || 'Something went wrong');
+
       if (tab === 'login') {
         const userData = data.user || data;
         setUser(userData);
@@ -122,9 +124,11 @@ export default function App() {
         setTab('login');
         setError('✓ Account created — please login');
       }
-    } catch (err) { setError(err.message); }
-    setLoading(false);
+    } catch (err) {
+      setError(err.message);
     }
+
+    setLoading(false);
   };
 
   const userNavItems = [
