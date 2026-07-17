@@ -1,22 +1,23 @@
-const { poolPromise } = require('../config/db');
+const { supabase } = require('../config/db');
 
 class Review {
     static async create(reviewData) {
         try {
-            const pool = await poolPromise;
-            const result = await pool.request()
-                .input('ReviewID', require('mssql').Int, reviewData.ReviewID)
-                .input('UserID', require('mssql').Int, reviewData.UserID)
-                .input('GameID', require('mssql').Int, reviewData.GameID)
-                .input('RentalID', require('mssql').Int, reviewData.RentalID)
-                .input('Rating', require('mssql').Int, reviewData.Rating)
-                .input('ReviewText', require('mssql').Text, reviewData.ReviewText)
-                .query(`
-                    INSERT INTO Reviews (ReviewID, UserID, GameID, RentalID, Rating, ReviewText)
-                    VALUES (@ReviewID, @UserID, @GameID, @RentalID, @Rating, @ReviewText)
-                    SELECT SCOPE_IDENTITY() as ReviewID
-                `);
-            return result.recordset[0];
+            const { data, error } = await supabase
+                .from('Reviews')
+                .insert([{
+                    ReviewID: reviewData.ReviewID,
+                    UserID: reviewData.UserID,
+                    GameID: reviewData.GameID,
+                    RentalID: reviewData.RentalID,
+                    Rating: reviewData.Rating,
+                    ReviewText: reviewData.ReviewText
+                }])
+                .select()
+                .single();
+            
+            if (error) throw error;
+            return data;
         } catch (error) {
             throw error;
         }
@@ -24,17 +25,24 @@ class Review {
 
     static async findById(reviewId) {
         try {
-            const pool = await poolPromise;
-            const result = await pool.request()
-                .input('ReviewID', require('mssql').Int, reviewId)
-                .query(`
-                    SELECT r.*, u.FullName as UserName, g.GameTitle
-                    FROM Reviews r
-                    JOIN Users u ON r.UserID = u.UserID
-                    JOIN Games g ON r.GameID = g.GameID
-                    WHERE r.ReviewID = @ReviewID
-                `);
-            return result.recordset[0];
+            const { data, error } = await supabase
+                .from('Reviews')
+                .select(`
+                    *,
+                    Users (FullName),
+                    Games (GameTitle)
+                `)
+                .eq('ReviewID', reviewId)
+                .single();
+            
+            if (error) throw error;
+            
+            // Transform the nested data structure
+            return {
+                ...data,
+                UserName: data.Users?.FullName,
+                GameTitle: data.Games?.GameTitle
+            };
         } catch (error) {
             throw error;
         }
@@ -42,17 +50,22 @@ class Review {
 
     static async findByGameId(gameId) {
         try {
-            const pool = await poolPromise;
-            const result = await pool.request()
-                .input('GameID', require('mssql').Int, gameId)
-                .query(`
-                    SELECT r.*, u.FullName as UserName
-                    FROM Reviews r
-                    JOIN Users u ON r.UserID = u.UserID
-                    WHERE r.GameID = @GameID
-                    ORDER BY r.ReviewID DESC
-                `);
-            return result.recordset;
+            const { data, error } = await supabase
+                .from('Reviews')
+                .select(`
+                    *,
+                    Users (FullName)
+                `)
+                .eq('GameID', gameId)
+                .order('ReviewID', { ascending: false });
+            
+            if (error) throw error;
+            
+            // Transform the nested data structure
+            return data.map(review => ({
+                ...review,
+                UserName: review.Users?.FullName
+            }));
         } catch (error) {
             throw error;
         }
@@ -60,17 +73,22 @@ class Review {
 
     static async findByUserId(userId) {
         try {
-            const pool = await poolPromise;
-            const result = await pool.request()
-                .input('UserID', require('mssql').Int, userId)
-                .query(`
-                    SELECT r.*, g.GameTitle
-                    FROM Reviews r
-                    JOIN Games g ON r.GameID = g.GameID
-                    WHERE r.UserID = @UserID
-                    ORDER BY r.ReviewID DESC
-                `);
-            return result.recordset;
+            const { data, error } = await supabase
+                .from('Reviews')
+                .select(`
+                    *,
+                    Games (GameTitle)
+                `)
+                .eq('UserID', userId)
+                .order('ReviewID', { ascending: false });
+            
+            if (error) throw error;
+            
+            // Transform the nested data structure
+            return data.map(review => ({
+                ...review,
+                GameTitle: review.Games?.GameTitle
+            }));
         } catch (error) {
             throw error;
         }
@@ -78,17 +96,18 @@ class Review {
 
     static async update(reviewId, reviewData) {
         try {
-            const pool = await poolPromise;
-            const result = await pool.request()
-                .input('ReviewID', require('mssql').Int, reviewId)
-                .input('Rating', require('mssql').Int, reviewData.Rating)
-                .input('ReviewText', require('mssql').Text, reviewData.ReviewText)
-                .query(`
-                    UPDATE Reviews 
-                    SET Rating = @Rating, ReviewText = @ReviewText
-                    WHERE ReviewID = @ReviewID
-                `);
-            return result.rowsAffected[0] > 0;
+            const { data, error } = await supabase
+                .from('Reviews')
+                .update({
+                    Rating: reviewData.Rating,
+                    ReviewText: reviewData.ReviewText
+                })
+                .eq('ReviewID', reviewId)
+                .select()
+                .single();
+            
+            if (error) throw error;
+            return data;
         } catch (error) {
             throw error;
         }
@@ -96,11 +115,13 @@ class Review {
 
     static async delete(reviewId) {
         try {
-            const pool = await poolPromise;
-            const result = await pool.request()
-                .input('ReviewID', require('mssql').Int, reviewId)
-                .query('DELETE FROM Reviews WHERE ReviewID = @ReviewID');
-            return result.rowsAffected[0] > 0;
+            const { error } = await supabase
+                .from('Reviews')
+                .delete()
+                .eq('ReviewID', reviewId);
+            
+            if (error) throw error;
+            return true;
         } catch (error) {
             throw error;
         }
@@ -108,15 +129,22 @@ class Review {
 
     static async getAverageRating(gameId) {
         try {
-            const pool = await poolPromise;
-            const result = await pool.request()
-                .input('GameID', require('mssql').Int, gameId)
-                .query(`
-                    SELECT AVG(CAST(Rating as FLOAT)) as AverageRating, COUNT(*) as ReviewCount
-                    FROM Reviews
-                    WHERE GameID = @GameID
-                `);
-            return result.recordset[0];
+            const { data, error } = await supabase
+                .from('Reviews')
+                .select('Rating')
+                .eq('GameID', gameId);
+            
+            if (error) throw error;
+            
+            const reviews = data || [];
+            const averageRating = reviews.length > 0 
+                ? reviews.reduce((sum, r) => sum + r.Rating, 0) / reviews.length 
+                : 0;
+            
+            return {
+                AverageRating: averageRating,
+                ReviewCount: reviews.length
+            };
         } catch (error) {
             throw error;
         }
@@ -124,19 +152,37 @@ class Review {
 
     static async canUserReview(userId, gameId) {
         try {
-            const pool = await poolPromise;
-            const result = await pool.request()
-                .input('UserID', require('mssql').Int, userId)
-                .input('GameID', require('mssql').Int, gameId)
-                .query(`
-                    SELECT r.RentalID
-                    FROM Rentals r
-                    JOIN DigitalCopies dc ON r.CopyID = dc.CopyID
-                    WHERE r.UserID = @UserID AND dc.GameID = @GameID AND r.DateReturned IS NOT NULL
-                    EXCEPT
-                    SELECT RentalID FROM Reviews WHERE UserID = @UserID AND GameID = @GameID
-                `);
-            return result.recordset.length > 0;
+            // Get rentals that have been returned for this user and game
+            const { data: rentals, error: rentalError } = await supabase
+                .from('Rentals')
+                .select(`
+                    RentalID,
+                    DigitalCopies (GameID)
+                `)
+                .eq('UserID', userId)
+                .not('DateReturned', 'is', null);
+            
+            if (rentalError) throw rentalError;
+            
+            // Filter rentals for the specific game
+            const gameRentals = rentals.filter(r => r.DigitalCopies?.GameID === gameId);
+            
+            if (gameRentals.length === 0) return false;
+            
+            // Check if user has already reviewed this game
+            const { data: existingReviews, error: reviewError } = await supabase
+                .from('Reviews')
+                .select('RentalID')
+                .eq('UserID', userId)
+                .eq('GameID', gameId);
+            
+            if (reviewError) throw reviewError;
+            
+            // Check if there are any rentals that haven't been reviewed yet
+            const reviewedRentalIds = existingReviews.map(r => r.RentalID);
+            const unreviewedRentals = gameRentals.filter(r => !reviewedRentalIds.includes(r.RentalID));
+            
+            return unreviewedRentals.length > 0;
         } catch (error) {
             throw error;
         }
@@ -144,16 +190,23 @@ class Review {
 
     static async getAll() {
         try {
-            const pool = await poolPromise;
-            const result = await pool.request()
-                .query(`
-                    SELECT r.*, u.FullName as UserName, g.GameTitle
-                    FROM Reviews r
-                    JOIN Users u ON r.UserID = u.UserID
-                    JOIN Games g ON r.GameID = g.GameID
-                    ORDER BY r.ReviewID DESC
-                `);
-            return result.recordset;
+            const { data, error } = await supabase
+                .from('Reviews')
+                .select(`
+                    *,
+                    Users (FullName),
+                    Games (GameTitle)
+                `)
+                .order('ReviewID', { ascending: false });
+            
+            if (error) throw error;
+            
+            // Transform the nested data structure
+            return data.map(review => ({
+                ...review,
+                UserName: review.Users?.FullName,
+                GameTitle: review.Games?.GameTitle
+            }));
         } catch (error) {
             throw error;
         }

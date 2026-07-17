@@ -1,18 +1,19 @@
-const { poolPromise } = require('../config/db');
+const { supabase } = require('../config/db');
 
 class Category {
     static async create(categoryData) {
         try {
-            const pool = await poolPromise;
-            const result = await pool.request()
-                .input('CategoryID', require('mssql').Int, categoryData.CategoryID)
-                .input('CategoryName', require('mssql').VarChar(50), categoryData.CategoryName)
-                .query(`
-                    INSERT INTO Categories (CategoryID, CategoryName)
-                    VALUES (@CategoryID, @CategoryName)
-                    SELECT SCOPE_IDENTITY() as CategoryID
-                `);
-            return result.recordset[0];
+            const { data, error } = await supabase
+                .from('Categories')
+                .insert([{
+                    CategoryID: categoryData.CategoryID,
+                    CategoryName: categoryData.CategoryName
+                }])
+                .select()
+                .single();
+            
+            if (error) throw error;
+            return data;
         } catch (error) {
             throw error;
         }
@@ -20,11 +21,14 @@ class Category {
 
     static async findById(categoryId) {
         try {
-            const pool = await poolPromise;
-            const result = await pool.request()
-                .input('CategoryID', require('mssql').Int, categoryId)
-                .query('SELECT * FROM Categories WHERE CategoryID = @CategoryID');
-            return result.recordset[0];
+            const { data, error } = await supabase
+                .from('Categories')
+                .select('*')
+                .eq('CategoryID', categoryId)
+                .single();
+            
+            if (error) throw error;
+            return data;
         } catch (error) {
             throw error;
         }
@@ -32,10 +36,13 @@ class Category {
 
     static async getAll() {
         try {
-            const pool = await poolPromise;
-            const result = await pool.request()
-                .query('SELECT * FROM Categories ORDER BY CategoryName');
-            return result.recordset;
+            const { data, error } = await supabase
+                .from('Categories')
+                .select('*')
+                .order('CategoryName');
+            
+            if (error) throw error;
+            return data;
         } catch (error) {
             throw error;
         }
@@ -43,16 +50,17 @@ class Category {
 
     static async update(categoryId, categoryData) {
         try {
-            const pool = await poolPromise;
-            const result = await pool.request()
-                .input('CategoryID', require('mssql').Int, categoryId)
-                .input('CategoryName', require('mssql').VarChar(50), categoryData.CategoryName)
-                .query(`
-                    UPDATE Categories 
-                    SET CategoryName = @CategoryName
-                    WHERE CategoryID = @CategoryID
-                `);
-            return result.rowsAffected[0] > 0;
+            const { data, error } = await supabase
+                .from('Categories')
+                .update({
+                    CategoryName: categoryData.CategoryName
+                })
+                .eq('CategoryID', categoryId)
+                .select()
+                .single();
+            
+            if (error) throw error;
+            return data;
         } catch (error) {
             throw error;
         }
@@ -60,11 +68,13 @@ class Category {
 
     static async delete(categoryId) {
         try {
-            const pool = await poolPromise;
-            const result = await pool.request()
-                .input('CategoryID', require('mssql').Int, categoryId)
-                .query('DELETE FROM Categories WHERE CategoryID = @CategoryID');
-            return result.rowsAffected[0] > 0;
+            const { error } = await supabase
+                .from('Categories')
+                .delete()
+                .eq('CategoryID', categoryId);
+            
+            if (error) throw error;
+            return true;
         } catch (error) {
             throw error;
         }

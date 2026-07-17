@@ -2,6 +2,8 @@
 const User = require('../models/User');
 // Import validation helpers from express-validator
 const { body, validationResult } = require('express-validator');
+// Import Supabase client for Auth
+const { supabase } = require('../config/db');
 
 // Utility: generate a random UserID
 // NOTE: In production you'd use auto-increment IDs or GUIDs instead
@@ -18,27 +20,42 @@ const register = async (req, res) => {
             return res.status(400).json({ errors: errors.array() });
         }
 
-        const { fullName, email } = req.body;
+        const { fullName, email, password } = req.body;
 
-        // Check if user already exists by email
+        // Register user with Supabase Auth
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                emailRedirectTo: undefined // Disable email verification
+            }
+        });
+
+        if (authError) {
+            return res.status(400).json({ message: authError.message });
+        }
+
+        // Check if user already exists in our Users table
         const existingUser = await User.findByEmail(email);
         if (existingUser) {
             return res.status(400).json({ message: 'User with this email already exists' });
         }
 
-        // Build user object
+        // Create user record in our Users table using Supabase auth ID as UserID
         const userData = {
-            UserID: generateUserId(),
+            UserID: authData.user.id,
             FullName: fullName,
             Email: email,
-            AccountStatus: 'Active'
+            AccountStatus: 'Active',
+            isAdmin: false
         };
 
-        // Insert into DB via model
         const newUser = await User.create(userData);
+        
         res.status(201).json({
             message: 'User registered successfully',
-            user: newUser
+            user: newUser,
+            supabaseUser: authData.user
         });
     } catch (error) {
         console.error('Registration error:', error);
@@ -48,8 +65,7 @@ const register = async (req, res) => {
 
 // ---------------------- User Login ----------------------
 
-// Controller: Login user (simplified)
-// NOTE: In production, proper authentication (passwords, JWT) should be used
+// Controller: Login user using Supabase Auth
 const login = async (req, res) => {
     try {
         // Validate input
@@ -58,12 +74,22 @@ const login = async (req, res) => {
             return res.status(400).json({ errors: errors.array() });
         }
 
-        const { email } = req.body;
+        const { email, password } = req.body;
 
-        // Find user by email
-        const user = await User.findByEmail(email);
-        if (!user) {
+        // Login with Supabase Auth
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+            email,
+            password
+        });
+
+        if (authError) {
             return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        // Find user in our Users table using Supabase auth ID as UserID
+        const user = await User.findById(authData.user.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found in system' });
         }
 
         // Check account status
@@ -71,15 +97,17 @@ const login = async (req, res) => {
             return res.status(401).json({ message: 'Account is not active' });
         }
 
-        // In production, generate JWT token here
         res.json({
             message: 'Login successful',
             user: {
                 UserID: user.UserID,
                 FullName: user.FullName,
                 Email: user.Email,
-                AccountStatus: user.AccountStatus
-            }
+                AccountStatus: user.AccountStatus,
+                isAdmin: user.isAdmin || false
+            },
+            token: authData.session.access_token,
+            refreshToken: authData.session.refresh_token
         });
     } catch (error) {
         console.error('Login error:', error);
@@ -264,12 +292,14 @@ const unsuspendUser = async (req, res) => {
 // Validation for registration
 const validateRegister = [
     body('fullName').trim().isLength({ min: 2, max: 50 }).withMessage('Full name must be between 2 and 50 characters'),
-    body('email').isEmail().normalizeEmail().withMessage('Valid email is required')
+    body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
 ];
 
 // Validation for login
 const validateLogin = [
-    body('email').isEmail().normalizeEmail().withMessage('Valid email is required')
+    body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+    body('password').notEmpty().withMessage('Password is required')
 ];
 
 // Validation for updating profile

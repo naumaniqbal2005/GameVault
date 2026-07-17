@@ -47,8 +47,9 @@ const getRentalTransactions = async (req, res) => {
 
 const getPurchaseTransactions = async (req, res) => {
     try {
-        const transactions = await Transaction.getPurchaseTransactions();
-        res.json(transactions);
+        const transactions = await Transaction.getAll();
+        const purchaseTransactions = transactions.filter(t => t.CopyID !== null);
+        res.json(purchaseTransactions);
     } catch (error) {
         console.error('Get purchase transactions error:', error);
         res.status(500).json({ message: 'Server error' });

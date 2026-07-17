@@ -1,42 +1,51 @@
-const { poolPromise } = require('../config/db');
+const { supabase } = require('../config/db');
+
+// Helper function to calculate rental status and days
+const calculateRentalInfo = (rental) => {
+    const dateIssued = new Date(rental.DateIssued);
+    const dateDue = new Date(rental.DateDue);
+    const dateReturned = rental.DateReturned ? new Date(rental.DateReturned) : null;
+    
+    const rentalDays = Math.ceil((dateDue - dateIssued) / (1000 * 60 * 60 * 24));
+    const daysOverdue = dateReturned 
+        ? Math.ceil((dateReturned - dateDue) / (1000 * 60 * 60 * 24))
+        : Math.ceil((new Date() - dateDue) / (1000 * 60 * 60 * 24));
+    
+    let rentalStatus = 'ACTIVE';
+    if (dateReturned) {
+        rentalStatus = dateReturned <= dateDue ? 'ON TIME' : 'LATE';
+    }
+    
+    return { rentalStatus, rentalDays, daysOverdue };
+};
 
 class Rental {
     static async create(rentalData) {
         try {
-            const pool = await poolPromise;
-            const transaction = pool.transaction();
+            // Create rental record
+            const { data: rental, error: rentalError } = await supabase
+                .from('Rentals')
+                .insert([{
+                    RentalID: rentalData.RentalID,
+                    UserID: rentalData.UserID,
+                    CopyID: rentalData.CopyID,
+                    DateIssued: rentalData.DateIssued,
+                    DateDue: rentalData.DateDue
+                }])
+                .select()
+                .single();
             
-            await transaction.begin();
+            if (rentalError) throw rentalError;
+
+            // Update digital copy availability
+            const { error: updateError } = await supabase
+                .from('DigitalCopies')
+                .update({ Availability: 'Rented' })
+                .eq('CopyID', rentalData.CopyID);
             
-            try {
-                // Create rental record
-                const rentalResult = await transaction.request()
-                    .input('RentalID', require('mssql').Int, rentalData.RentalID)
-                    .input('UserID', require('mssql').Int, rentalData.UserID)
-                    .input('CopyID', require('mssql').Int, rentalData.CopyID)
-                    .input('DateIssued', require('mssql').Date, rentalData.DateIssued)
-                    .input('DateDue', require('mssql').Date, rentalData.DateDue)
-                    .query(`
-                        INSERT INTO Rentals (RentalID, UserID, CopyID, DateIssued, DateDue)
-                        VALUES (@RentalID, @UserID, @CopyID, @DateIssued, @DateDue)
-                        SELECT @RentalID as RentalID
-                    `);
+            if (updateError) throw updateError;
 
-                // Update digital copy availability
-                await transaction.request()
-                    .input('CopyID', require('mssql').Int, rentalData.CopyID)
-                    .query(`
-                        UPDATE DigitalCopies 
-                        SET Availability = 'Rented'
-                        WHERE CopyID = @CopyID
-                    `);
-
-                await transaction.commit();
-                return rentalResult.recordset[0];
-            } catch (error) {
-                await transaction.rollback();
-                throw error;
-            }
+            return rental;
         } catch (error) {
             throw error;
         }
@@ -44,36 +53,31 @@ class Rental {
 
     static async findById(rentalId) {
         try {
-            const pool = await poolPromise;
-            const result = await pool.request()
-                .input('RentalID', require('mssql').Int, rentalId)
-                .query(`
-                    SELECT 
-                        r.RentalID,
-                        r.UserID,
-                        r.CopyID,
-                        r.DateIssued,
-                        r.DateDue,
-                        r.DateReturned,
-                        u.FullName as UserName,
-                        u.Email as UserEmail,
-                        g.GameTitle,
-                        g.Platform,
-                        g.Genre,
-                        CASE 
-                            WHEN r.DateReturned IS NULL THEN 'ACTIVE'
-                            WHEN r.DateReturned <= r.DateDue THEN 'ON TIME'
-                            ELSE 'LATE'
-                        END as RentalStatus,
-                        DATEDIFF(day, r.DateIssued, r.DateDue) as RentalDays,
-                        DATEDIFF(day, r.DateDue, ISNULL(r.DateReturned, GETDATE())) as DaysOverdue
-                    FROM Rentals r
-                    JOIN Users u ON r.UserID = u.UserID
-                    JOIN DigitalCopies dc ON r.CopyID = dc.CopyID
-                    JOIN Games g ON dc.GameID = g.GameID
-                    WHERE r.RentalID = @RentalID
-                `);
-            return result.recordset[0];
+            const { data, error } = await supabase
+                .from('Rentals')
+                .select(`
+                    *,
+                    Users (FullName, Email),
+                    DigitalCopies (GameID),
+                    DigitalCopies!inner (Games (GameTitle, Platform, Genre))
+                `)
+                .eq('RentalID', rentalId)
+                .single();
+            
+            if (error) throw error;
+            
+            // Transform the nested data structure
+            const rental = {
+                ...data,
+                UserName: data.Users?.FullName,
+                UserEmail: data.Users?.Email,
+                GameTitle: data.DigitalCopies?.Games?.GameTitle,
+                Platform: data.DigitalCopies?.Games?.Platform,
+                Genre: data.DigitalCopies?.Games?.Genre,
+                ...calculateRentalInfo(data)
+            };
+            
+            return rental;
         } catch (error) {
             throw error;
         }
@@ -81,37 +85,29 @@ class Rental {
 
     static async findByUserId(userId) {
         try {
-            const pool = await poolPromise;
-            const result = await pool.request()
-                .input('UserID', require('mssql').Int, userId)
-                .query(`
-                    SELECT 
-                        r.RentalID,
-                        r.UserID,
-                        r.CopyID,
-                        r.DateIssued,
-                        r.DateDue,
-                        r.DateReturned,
-                        u.FullName as UserName,
-                        u.Email as UserEmail,
-                        g.GameTitle,
-                        g.Platform,
-                        g.Genre,
-                        CASE 
-                            WHEN r.DateReturned IS NULL THEN 'ACTIVE'
-                            WHEN r.DateReturned <= r.DateDue THEN 'ON TIME'
-                            ELSE 'LATE'
-                        END as RentalStatus,
-                        DATEDIFF(day, r.DateIssued, r.DateDue) as RentalDays,
-                        DATEDIFF(day, r.DateDue, ISNULL(r.DateReturned, GETDATE())) as DaysOverdue
-                    FROM Rentals r
-                    JOIN Users u ON r.UserID = u.UserID
-                    JOIN DigitalCopies dc ON r.CopyID = dc.CopyID
-                    JOIN Games g ON dc.GameID = g.GameID
-                    WHERE r.UserID = @UserID
-                    ORDER BY r.DateIssued DESC
-                `);
-            return result.recordset;
+            const { data, error } = await supabase
+                .from('Rentals')
+                .select(`
+                    *,
+                    Users (FullName, Email),
+                    DigitalCopies (GameID),
+                    DigitalCopies!inner (Games (GameTitle, Platform, Genre))
+                `)
+                .eq('UserID', userId)
+                .order('DateIssued', { ascending: false });
+            
+            if (error) throw error;
+            
+            // Transform the nested data structure
+            return data.map(rental => ({
+                ...rental,
+                UserName: rental.Users?.FullName,
+                UserEmail: rental.Users?.Email,
+                GameTitle: rental.DigitalCopies?.Games?.GameTitle,
+                Platform: rental.DigitalCopies?.Games?.Platform,
+                Genre: rental.DigitalCopies?.Games?.Genre,
+                ...calculateRentalInfo(rental)
+            }));
         } catch (error) {
             throw error;
         }
@@ -119,37 +115,30 @@ class Rental {
 
     static async getActiveRentals(userId) {
         try {
-            const pool = await poolPromise;
-            const result = await pool.request()
-                .input('UserID', require('mssql').Int, userId)
-                .query(`
-                    SELECT 
-                        r.RentalID,
-                        r.UserID,
-                        r.CopyID,
-                        r.DateIssued,
-                        r.DateDue,
-                        r.DateReturned,
-                        u.FullName as UserName,
-                        u.Email as UserEmail,
-                        g.GameTitle,
-                        g.Platform,
-                        g.Genre,
-                        CASE 
-                            WHEN r.DateReturned IS NULL THEN 'ACTIVE'
-                            WHEN r.DateReturned <= r.DateDue THEN 'ON TIME'
-                            ELSE 'LATE'
-                        END as RentalStatus,
-                        DATEDIFF(day, r.DateIssued, r.DateDue) as RentalDays,
-                        DATEDIFF(day, r.DateDue, ISNULL(r.DateReturned, GETDATE())) as DaysOverdue
-                    FROM Rentals r
-                    JOIN Users u ON r.UserID = u.UserID
-                    JOIN DigitalCopies dc ON r.CopyID = dc.CopyID
-                    JOIN Games g ON dc.GameID = g.GameID
-                    WHERE r.UserID = @UserID AND r.DateReturned IS NULL
-                    ORDER BY r.DateDue ASC
-                `);
-            return result.recordset;
+            const { data, error } = await supabase
+                .from('Rentals')
+                .select(`
+                    *,
+                    Users (FullName, Email),
+                    DigitalCopies (GameID),
+                    DigitalCopies!inner (Games (GameTitle, Platform, Genre))
+                `)
+                .eq('UserID', userId)
+                .is('DateReturned', null)
+                .order('DateDue', { ascending: true });
+            
+            if (error) throw error;
+            
+            // Transform the nested data structure
+            return data.map(rental => ({
+                ...rental,
+                UserName: rental.Users?.FullName,
+                UserEmail: rental.Users?.Email,
+                GameTitle: rental.DigitalCopies?.Games?.GameTitle,
+                Platform: rental.DigitalCopies?.Games?.Platform,
+                Genre: rental.DigitalCopies?.Games?.Genre,
+                ...calculateRentalInfo(rental)
+            }));
         } catch (error) {
             throw error;
         }
@@ -157,48 +146,35 @@ class Rental {
 
     static async returnGame(rentalId) {
         try {
-            const pool = await poolPromise;
-            const transaction = pool.transaction();
+            // Get rental details
+            const { data: rental, error: rentalError } = await supabase
+                .from('Rentals')
+                .select('CopyID')
+                .eq('RentalID', rentalId)
+                .single();
             
-            await transaction.begin();
+            if (rentalError) throw rentalError;
+            if (!rental) throw new Error('Rental not found');
+
+            const copyId = rental.CopyID;
+
+            // Update rental with return date
+            const { error: updateError } = await supabase
+                .from('Rentals')
+                .update({ DateReturned: new Date() })
+                .eq('RentalID', rentalId);
             
-            try {
-                // Get rental details
-                const rentalResult = await transaction.request()
-                    .input('RentalID', require('mssql').Int, rentalId)
-                    .query('SELECT CopyID FROM Rentals WHERE RentalID = @RentalID');
-                
-                if (rentalResult.recordset.length === 0) {
-                    throw new Error('Rental not found');
-                }
+            if (updateError) throw updateError;
 
-                const copyId = rentalResult.recordset[0].CopyID;
+            // Update digital copy availability
+            const { error: copyError } = await supabase
+                .from('DigitalCopies')
+                .update({ Availability: 'Available' })
+                .eq('CopyID', copyId);
+            
+            if (copyError) throw copyError;
 
-                // Update rental with return date
-                await transaction.request()
-                    .input('RentalID', require('mssql').Int, rentalId)
-                    .input('DateReturned', require('mssql').Date, new Date())
-                    .query(`
-                        UPDATE Rentals 
-                        SET DateReturned = @DateReturned
-                        WHERE RentalID = @RentalID
-                    `);
-
-                // Update digital copy availability
-                await transaction.request()
-                    .input('CopyID', require('mssql').Int, copyId)
-                    .query(`
-                        UPDATE DigitalCopies 
-                        SET Availability = 'Available'
-                        WHERE CopyID = @CopyID
-                    `);
-
-                await transaction.commit();
-                return true;
-            } catch (error) {
-                await transaction.rollback();
-                throw error;
-            }
+            return true;
         } catch (error) {
             throw error;
         }
@@ -206,35 +182,28 @@ class Rental {
 
     static async getAll() {
         try {
-            const pool = await poolPromise;
-            const result = await pool.request()
-                .query(`
-                    SELECT 
-                        r.RentalID,
-                        r.UserID,
-                        r.CopyID,
-                        r.DateIssued,
-                        r.DateDue,
-                        r.DateReturned,
-                        u.FullName as UserName,
-                        u.Email as UserEmail,
-                        g.GameTitle,
-                        g.Platform,
-                        g.Genre,
-                        CASE 
-                            WHEN r.DateReturned IS NULL THEN 'ACTIVE'
-                            WHEN r.DateReturned <= r.DateDue THEN 'ON TIME'
-                            ELSE 'LATE'
-                        END as RentalStatus,
-                        DATEDIFF(day, r.DateIssued, r.DateDue) as RentalDays,
-                        DATEDIFF(day, r.DateDue, ISNULL(r.DateReturned, GETDATE())) as DaysOverdue
-                    FROM Rentals r
-                    JOIN Users u ON r.UserID = u.UserID
-                    JOIN DigitalCopies dc ON r.CopyID = dc.CopyID
-                    JOIN Games g ON dc.GameID = g.GameID
-                    ORDER BY r.DateIssued DESC
-                `);
-            return result.recordset;
+            const { data, error } = await supabase
+                .from('Rentals')
+                .select(`
+                    *,
+                    Users (FullName, Email),
+                    DigitalCopies (GameID),
+                    DigitalCopies!inner (Games (GameTitle, Platform, Genre))
+                `)
+                .order('DateIssued', { ascending: false });
+            
+            if (error) throw error;
+            
+            // Transform the nested data structure
+            return data.map(rental => ({
+                ...rental,
+                UserName: rental.Users?.FullName,
+                UserEmail: rental.Users?.Email,
+                GameTitle: rental.DigitalCopies?.Games?.GameTitle,
+                Platform: rental.DigitalCopies?.Games?.Platform,
+                Genre: rental.DigitalCopies?.Games?.Genre,
+                ...calculateRentalInfo(rental)
+            }));
         } catch (error) {
             throw error;
         }
@@ -242,32 +211,31 @@ class Rental {
 
     static async getOverdueRentals() {
         try {
-            const pool = await poolPromise;
-            const result = await pool.request()
-                .query(`
-                    SELECT 
-                        r.RentalID,
-                        r.UserID,
-                        r.CopyID,
-                        r.DateIssued,
-                        r.DateDue,
-                        r.DateReturned,
-                        u.FullName as UserName,
-                        u.Email as UserEmail,
-                        g.GameTitle,
-                        g.Platform,
-                        g.Genre,
-                        'LATE' as RentalStatus,
-                        DATEDIFF(day, r.DateIssued, r.DateDue) as RentalDays,
-                        DATEDIFF(day, r.DateDue, GETDATE()) as DaysOverdue
-                    FROM Rentals r
-                    JOIN Users u ON r.UserID = u.UserID
-                    JOIN DigitalCopies dc ON r.CopyID = dc.CopyID
-                    JOIN Games g ON dc.GameID = g.GameID
-                    WHERE r.DateReturned IS NULL AND r.DateDue < GETDATE()
-                    ORDER BY r.DateDue ASC
-                `);
-            return result.recordset;
+            const { data, error } = await supabase
+                .from('Rentals')
+                .select(`
+                    *,
+                    Users (FullName, Email),
+                    DigitalCopies (GameID),
+                    DigitalCopies!inner (Games (GameTitle, Platform, Genre))
+                `)
+                .is('DateReturned', null)
+                .lt('DateDue', new Date().toISOString())
+                .order('DateDue', { ascending: true });
+            
+            if (error) throw error;
+            
+            // Transform the nested data structure
+            return data.map(rental => ({
+                ...rental,
+                UserName: rental.Users?.FullName,
+                UserEmail: rental.Users?.Email,
+                GameTitle: rental.DigitalCopies?.Games?.GameTitle,
+                Platform: rental.DigitalCopies?.Games?.Platform,
+                Genre: rental.DigitalCopies?.Games?.Genre,
+                rentalStatus: 'LATE',
+                ...calculateRentalInfo(rental)
+            }));
         } catch (error) {
             throw error;
         }
@@ -275,44 +243,35 @@ class Rental {
 
     static async delete(rentalId) {
         try {
-            const pool = await poolPromise;
-            const transaction = pool.transaction();
+            // Get rental details before deletion
+            const { data: rental, error: rentalError } = await supabase
+                .from('Rentals')
+                .select('CopyID')
+                .eq('RentalID', rentalId)
+                .single();
             
-            await transaction.begin();
+            if (rentalError) throw rentalError;
+            if (!rental) return false;
+
+            const copyId = rental.CopyID;
+
+            // Update digital copy availability back to 'Available'
+            const { error: copyError } = await supabase
+                .from('DigitalCopies')
+                .update({ Availability: 'Available' })
+                .eq('CopyID', copyId);
             
-            try {
-                // Get rental details before deletion
-                const rentalResult = await transaction.request()
-                    .input('RentalID', require('mssql').Int, rentalId)
-                    .query('SELECT CopyID FROM Rentals WHERE RentalID = @RentalID');
-                
-                if (rentalResult.recordset.length === 0) {
-                    await transaction.rollback();
-                    return false;
-                }
+            if (copyError) throw copyError;
 
-                const copyId = rentalResult.recordset[0].CopyID;
+            // Delete the rental record
+            const { error: deleteError } = await supabase
+                .from('Rentals')
+                .delete()
+                .eq('RentalID', rentalId);
+            
+            if (deleteError) throw deleteError;
 
-                // Update digital copy availability back to 'Available'
-                await transaction.request()
-                    .input('CopyID', require('mssql').Int, copyId)
-                    .query(`
-                        UPDATE DigitalCopies 
-                        SET Availability = 'Available'
-                        WHERE CopyID = @CopyID
-                    `);
-
-                // Delete the rental record
-                const deleteResult = await transaction.request()
-                    .input('RentalID', require('mssql').Int, rentalId)
-                    .query('DELETE FROM Rentals WHERE RentalID = @RentalID');
-
-                await transaction.commit();
-                return deleteResult.rowsAffected[0] > 0;
-            } catch (error) {
-                await transaction.rollback();
-                throw error;
-            }
+            return true;
         } catch (error) {
             throw error;
         }

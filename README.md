@@ -363,3 +363,9 @@ Content-Type: application/json
 ## 📄 License
 
 This project is licensed under the MIT License.
+
+
+
+upload image and wait for an admin response- digital
+give credentials for physical delvery like address and phone number, then order dispatched
+Give statistical inference to both admin and better search filter for normie users

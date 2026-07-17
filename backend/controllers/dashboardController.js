@@ -1,85 +1,108 @@
-const User = require('../models/User');
-const Game = require('../models/Game');
-const Rental = require('../models/Rental');
-const Transaction = require('../models/Transaction');
+const { supabase } = require('../config/db');
 
 const getDashboardStats = async (req, res) => {
     try {
-        const pool = require('../config/db').poolPromise;
-        const poolConnection = await pool;
-
         // Get total users
-        const usersResult = await poolConnection.request().query('SELECT COUNT(*) as count FROM Users');
-        const totalUsers = usersResult.recordset[0].count;
+        const { count: totalUsers, error: usersError } = await supabase
+            .from('Users')
+            .select('*', { count: 'exact', head: true });
+        
+        if (usersError) throw usersError;
 
         // Get total games
-        const gamesResult = await poolConnection.request().query('SELECT COUNT(*) as count FROM Games');
-        const totalGames = gamesResult.recordset[0].count;
+        const { count: totalGames, error: gamesError } = await supabase
+            .from('Games')
+            .select('*', { count: 'exact', head: true });
+        
+        if (gamesError) throw gamesError;
 
         // Get active rentals
-        const activeRentalsResult = await poolConnection.request().query(`
-            SELECT COUNT(*) as count FROM Rentals WHERE DateReturned IS NULL
-        `);
-        const activeRentals = activeRentalsResult.recordset[0].count;
+        const { count: activeRentals, error: activeRentalsError } = await supabase
+            .from('Rentals')
+            .select('*', { count: 'exact', head: true })
+            .is('DateReturned', null);
+        
+        if (activeRentalsError) throw activeRentalsError;
 
         // Get total revenue
-        const revenueResult = await poolConnection.request().query(`
-            SELECT SUM(Amount) as total FROM Transactions
-        `);
-        const totalRevenue = revenueResult.recordset[0].total || 0;
+        const { data: revenueData, error: revenueError } = await supabase
+            .from('Transactions')
+            .select('Amount');
+        
+        if (revenueError) throw revenueError;
+        
+        const totalRevenue = revenueData.reduce((sum, t) => sum + (t.Amount || 0), 0);
 
         // Get total rentals
-        const totalRentalsResult = await poolConnection.request().query('SELECT COUNT(*) as count FROM Rentals');
-        const totalRentals = totalRentalsResult.recordset[0].count;
+        const { count: totalRentals, error: totalRentalsError } = await supabase
+            .from('Rentals')
+            .select('*', { count: 'exact', head: true });
+        
+        if (totalRentalsError) throw totalRentalsError;
 
-        // Get total purchases
-        const totalPurchasesResult = await poolConnection.request().query('SELECT COUNT(*) as count FROM Purchases');
-        const totalPurchases = totalPurchasesResult.recordset[0].count;
+        // Get total purchases (from Transactions with CopyID)
+        const { count: totalPurchases, error: totalPurchasesError } = await supabase
+            .from('Transactions')
+            .select('*', { count: 'exact', head: true })
+            .not('CopyID', 'is', null);
+        
+        if (totalPurchasesError) throw totalPurchasesError;
 
         // Get available digital copies
-        const availableDigitalResult = await poolConnection.request().query(`
-            SELECT COUNT(*) as count FROM DigitalCopies WHERE Availability = 'Available'
-        `);
-        const availableDigital = availableDigitalResult.recordset[0].count;
+        const { count: availableDigital, error: availableDigitalError } = await supabase
+            .from('DigitalCopies')
+            .select('*', { count: 'exact', head: true })
+            .eq('Availability', 'Available');
+        
+        if (availableDigitalError) throw availableDigitalError;
 
         // Get available physical copies
-        const availablePhysicalResult = await poolConnection.request().query(`
-            SELECT COUNT(*) as count FROM PhysicalCopies WHERE Availability = 'Available'
-        `);
-        const availablePhysical = availablePhysicalResult.recordset[0].count;
+        const { count: availablePhysical, error: availablePhysicalError } = await supabase
+            .from('PhysicalCopies')
+            .select('*', { count: 'exact', head: true })
+            .eq('Availability', 'Available');
+        
+        if (availablePhysicalError) throw availablePhysicalError;
 
         // Get recent transactions (last 5)
-        const recentTransactionsResult = await poolConnection.request().query(`
-            SELECT TOP 5 t.*, u.FullName as UserName, a.FullName as AdminName,
-                   CASE 
-                       WHEN t.RentalID IS NOT NULL THEN 'Rental'
-                       WHEN t.PurchaseID IS NOT NULL THEN 'Purchase'
-                   END as TransactionType
-            FROM Transactions t
-            JOIN Users u ON t.UserID = u.UserID
-            JOIN Admins a ON t.AdminID = a.AdminID
-            ORDER BY t.TransactionDate DESC
-        `);
-        const recentTransactions = recentTransactionsResult.recordset;
+        const { data: recentTransactions, error: recentError } = await supabase
+            .from('Transactions')
+            .select(`
+                *,
+                Users (FullName)
+            `)
+            .order('TransactionDate', { ascending: false })
+            .limit(5);
+        
+        if (recentError) throw recentError;
+        
+        // Transform recent transactions
+        const transformedTransactions = recentTransactions.map(t => ({
+            ...t,
+            UserName: t.Users?.FullName,
+            TransactionType: t.RentalID ? 'Rental' : (t.CopyID ? 'Purchase' : 'Other')
+        }));
 
         // Get overdue rentals
-        const overdueRentalsResult = await poolConnection.request().query(`
-            SELECT COUNT(*) as count FROM Rentals 
-            WHERE DateReturned IS NULL AND DateDue < GETDATE()
-        `);
-        const overdueRentals = overdueRentalsResult.recordset[0].count;
+        const { count: overdueRentals, error: overdueError } = await supabase
+            .from('Rentals')
+            .select('*', { count: 'exact', head: true })
+            .is('DateReturned', null)
+            .lt('DateDue', new Date().toISOString());
+        
+        if (overdueError) throw overdueError;
 
         res.json({
-            totalUsers,
-            totalGames,
-            activeRentals,
+            totalUsers: totalUsers || 0,
+            totalGames: totalGames || 0,
+            activeRentals: activeRentals || 0,
             totalRevenue: parseFloat(totalRevenue).toFixed(2),
-            totalRentals,
-            totalPurchases,
-            availableDigital,
-            availablePhysical,
-            recentTransactions,
-            overdueRentals
+            totalRentals: totalRentals || 0,
+            totalPurchases: totalPurchases || 0,
+            availableDigital: availableDigital || 0,
+            availablePhysical: availablePhysical || 0,
+            recentTransactions: transformedTransactions,
+            overdueRentals: overdueRentals || 0
         });
     } catch (error) {
         console.error('Get dashboard stats error:', error);

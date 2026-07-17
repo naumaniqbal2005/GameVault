@@ -4,19 +4,6 @@ const API = 'http://localhost:5000/api';
 const BANNERS = ['banner-1','banner-2','banner-3','banner-4','banner-5'];
 const EMOJIS  = ['⚔️','🐉','🏆','🔫','🚀','🌌','👾','🎯','🛡️','🌊'];
 
-const COVERS = {
-  'God of War':                  'https://images.wallpapersden.com/image/download/atreus-kratos-god-of-war-2018_a2ZrZm2UmZqaraWkpJRmbmdlrWZlbWU.jpg',
-  'Elden Ring':                  'https://tse3.mm.bing.net/th/id/OIP.P0-K3kdmGjRLYCWhGNruUwHaEK?rs=1&pid=ImgDetMain&o=7&rm=3',
-  'FIFA 24':                     'https://tse2.mm.bing.net/th/id/OIP.xr0SfoLYUDm-pAMG-gkADgHaEK?rs=1&pid=ImgDetMain&o=7&rm=3',
-  'Spider-Man 2':                'https://i.gadgets360cdn.com/products/large/spider-man-2-poster-1543x2160-1686288382.jpg',
-  'Cyberpunk 2077':              'https://cdn1.epicgames.com/offer/77f2b98e2cef40c8a7437518bf420e47/EGS_Cyberpunk2077_CDPROJEKTRED_S1_03_2560x1440-359e77d3cd0a40aebf3bbc130d14c5c7',
-  'Hollow Knight':               'https://gaming-cdn.com/images/products/2198/orig-fallback-v1/hollow-knight-pc-mac-game-steam-cover.jpg?v=1705490619',
-  'Resident Evil 4':             'https://cdn.wccftech.com/wp-content/uploads/2023/02/WCCFresidentevil4remake14.jpg',
-  'The Witcher 3':               'https://tse4.mm.bing.net/th/id/OIP.G8AqB-jB4rGrjl8ToU0cywHaEK?rs=1&pid=ImgDetMain&o=7&rm=3',
-  'Zelda Tears of the Kingdom':  'https://zeldacentral.com/wp-content/uploads/2025/03/Tears-of-the-Kingdom-wallpaper.jpg',
-  'Halo Infinite':               'https://gamingbolt.com/wp-content/uploads/2020/07/halo-infinite.jpg',
-};
-
 export default function GameList({ user }) {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);

@@ -1,27 +1,31 @@
-const { poolPromise } = require('../config/db');
+const { supabase } = require('../config/db');
 
 class PhysicalCopy {
     static async create(copyData) {
         try {
-            const pool = await poolPromise;
-            
             // Generate a unique CopyID
-            const maxIdResult = await pool.request().query(`
-                SELECT ISNULL(MAX(CopyID), 0) as MaxId FROM PhysicalCopies
-            `);
-            const newCopyId = maxIdResult.recordset[0].MaxId + 1;
+            const { data: maxData } = await supabase
+                .from('PhysicalCopies')
+                .select('CopyID')
+                .order('CopyID', { ascending: false })
+                .limit(1)
+                .single();
             
-            const result = await pool.request()
-                .input('CopyID', require('mssql').Int, newCopyId)
-                .input('GameID', require('mssql').Int, copyData.GameID)
-                .input('CopyCondition', require('mssql').VarChar(20), copyData.CopyCondition)
-                .input('Availability', require('mssql').VarChar(20), copyData.Availability)
-                .query(`
-                    INSERT INTO PhysicalCopies (CopyID, GameID, CopyCondition, Availability)
-                    VALUES (@CopyID, @GameID, @CopyCondition, @Availability)
-                `);
+            const newCopyId = maxData ? maxData.CopyID + 1 : 1;
             
-            return { CopyID: newCopyId };
+            const { data, error } = await supabase
+                .from('PhysicalCopies')
+                .insert([{
+                    CopyID: newCopyId,
+                    GameID: copyData.GameID,
+                    CopyCondition: copyData.CopyCondition,
+                    Availability: copyData.Availability
+                }])
+                .select()
+                .single();
+            
+            if (error) throw error;
+            return data;
         } catch (error) {
             throw error;
         }
@@ -29,14 +33,13 @@ class PhysicalCopy {
 
     static async findByGameId(gameId) {
         try {
-            const pool = await poolPromise;
-            const result = await pool.request()
-                .input('GameID', require('mssql').Int, gameId)
-                .query(`
-                    SELECT * FROM PhysicalCopies 
-                    WHERE GameID = @GameID
-                `);
-            return result.recordset;
+            const { data, error } = await supabase
+                .from('PhysicalCopies')
+                .select('*')
+                .eq('GameID', gameId);
+            
+            if (error) throw error;
+            return data;
         } catch (error) {
             throw error;
         }
@@ -44,14 +47,14 @@ class PhysicalCopy {
 
     static async findAvailable(gameId) {
         try {
-            const pool = await poolPromise;
-            const result = await pool.request()
-                .input('GameID', require('mssql').Int, gameId)
-                .query(`
-                    SELECT * FROM PhysicalCopies 
-                    WHERE GameID = @GameID AND Availability = 'Available'
-                `);
-            return result.recordset;
+            const { data, error } = await supabase
+                .from('PhysicalCopies')
+                .select('*')
+                .eq('GameID', gameId)
+                .eq('Availability', 'Available');
+            
+            if (error) throw error;
+            return data;
         } catch (error) {
             throw error;
         }
