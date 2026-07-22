@@ -3,11 +3,12 @@ const express = require('express');
 const router = express.Router();
 
 // Import controller functions
-const { login } = require('../controllers/userController');
 const { body, validationResult } = require('express-validator');
 const { verifyToken, verifyAdmin } = require('../middleware/auth');
-const { supabase } = require('../config/db');
 const User = require('../models/User');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 // Validation for admin login
 const validateAdminLogin = [
@@ -15,7 +16,7 @@ const validateAdminLogin = [
     body('password').notEmpty().withMessage('Password is required')
 ];
 
-// POST /admin/login → Admin login (uses Supabase Auth but checks isAdmin)
+// POST /admin/login → Admin login (uses JWT and checks isAdmin)
 router.post('/login', validateAdminLogin, async (req, res) => {
     try {
         const errors = validationResult(req);
@@ -25,20 +26,16 @@ router.post('/login', validateAdminLogin, async (req, res) => {
 
         const { email, password } = req.body;
 
-        // Login with Supabase Auth
-        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-            email,
-            password
-        });
-
-        if (authError) {
+        // Find user by email
+        const user = await User.findByEmail(email);
+        if (!user) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-        // Find user in our Users table using Supabase auth ID as UserID
-        const user = await User.findById(authData.user.id);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found in system' });
+        // Verify password
+        const isPasswordValid = await User.comparePassword(password, user.Password);
+        if (!isPasswordValid) {
+            return res.status(401).json({ message: 'Invalid credentials' });
         }
 
         // Check if user is admin
@@ -51,6 +48,13 @@ router.post('/login', validateAdminLogin, async (req, res) => {
             return res.status(401).json({ message: 'Account is not active' });
         }
 
+        // Generate JWT token
+        const token = jwt.sign(
+            { userId: user.UserID, email: user.Email },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
         res.json({
             message: 'Admin login successful',
             user: {
@@ -60,8 +64,7 @@ router.post('/login', validateAdminLogin, async (req, res) => {
                 AccountStatus: user.AccountStatus,
                 isAdmin: true
             },
-            token: authData.session.access_token,
-            refreshToken: authData.session.refresh_token
+            token
         });
     } catch (error) {
         console.error('Admin login error:', error);

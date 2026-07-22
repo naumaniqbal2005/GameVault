@@ -2,8 +2,10 @@
 const User = require('../models/User');
 // Import validation helpers from express-validator
 const { body, validationResult } = require('express-validator');
-// Import Supabase client for Auth
-const { supabase } = require('../config/db');
+// Import JWT for token generation
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 // Utility: generate a random UserID
 // NOTE: In production you'd use auto-increment IDs or GUIDs instead
@@ -22,40 +24,40 @@ const register = async (req, res) => {
 
         const { fullName, email, password } = req.body;
 
-        // Register user with Supabase Auth
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                emailRedirectTo: undefined // Disable email verification
-            }
-        });
-
-        if (authError) {
-            return res.status(400).json({ message: authError.message });
-        }
-
         // Check if user already exists in our Users table
         const existingUser = await User.findByEmail(email);
         if (existingUser) {
             return res.status(400).json({ message: 'User with this email already exists' });
         }
 
-        // Create user record in our Users table using Supabase auth ID as UserID
+        // Create user record in our Users table
         const userData = {
-            UserID: authData.user.id,
             FullName: fullName,
             Email: email,
+            Password: password,
             AccountStatus: 'Active',
             isAdmin: false
         };
 
         const newUser = await User.create(userData);
         
+        // Generate JWT token
+        const token = jwt.sign(
+            { userId: newUser.UserID, email: newUser.Email },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+        
         res.status(201).json({
             message: 'User registered successfully',
-            user: newUser,
-            supabaseUser: authData.user
+            user: {
+                UserID: newUser.UserID,
+                FullName: newUser.FullName,
+                Email: newUser.Email,
+                AccountStatus: newUser.AccountStatus,
+                isAdmin: newUser.isAdmin
+            },
+            token
         });
     } catch (error) {
         console.error('Registration error:', error);
@@ -65,7 +67,7 @@ const register = async (req, res) => {
 
 // ---------------------- User Login ----------------------
 
-// Controller: Login user using Supabase Auth
+// Controller: Login user using JWT
 const login = async (req, res) => {
     try {
         // Validate input
@@ -76,26 +78,29 @@ const login = async (req, res) => {
 
         const { email, password } = req.body;
 
-        // Login with Supabase Auth
-        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-            email,
-            password
-        });
-
-        if (authError) {
+        // Find user by email
+        const user = await User.findByEmail(email);
+        if (!user) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-        // Find user in our Users table using Supabase auth ID as UserID
-        const user = await User.findById(authData.user.id);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found in system' });
+        // Verify password
+        const isPasswordValid = await User.comparePassword(password, user.Password);
+        if (!isPasswordValid) {
+            return res.status(401).json({ message: 'Invalid credentials' });
         }
 
         // Check account status
         if (user.AccountStatus !== 'Active') {
             return res.status(401).json({ message: 'Account is not active' });
         }
+
+        // Generate JWT token
+        const token = jwt.sign(
+            { userId: user.UserID, email: user.Email },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
 
         res.json({
             message: 'Login successful',
@@ -106,8 +111,7 @@ const login = async (req, res) => {
                 AccountStatus: user.AccountStatus,
                 isAdmin: user.isAdmin || false
             },
-            token: authData.session.access_token,
-            refreshToken: authData.session.refresh_token
+            token
         });
     } catch (error) {
         console.error('Login error:', error);

@@ -4,7 +4,7 @@ class Game {
     static async create(gameData) {
         try {
             const { data, error } = await supabase
-                .from('Games')
+                .from('games')
                 .insert([{
                     GameID: gameData.GameID,
                     GameTitle: gameData.GameTitle,
@@ -27,10 +27,10 @@ class Game {
     static async findById(gameId) {
         try {
             const { data, error } = await supabase
-                .from('Games')
+                .from('games')
                 .select(`
                     *,
-                    Categories (CategoryName)
+                    categories (CategoryName)
                 `)
                 .eq('GameID', gameId)
                 .single();
@@ -45,10 +45,10 @@ class Game {
     static async getAll(filters = {}) {
         try {
             let query = supabase
-                .from('Games')
+                .from('games')
                 .select(`
                     *,
-                    Categories (CategoryName)
+                    categories (CategoryName)
                 `);
             
             if (filters.category) {
@@ -81,7 +81,7 @@ class Game {
     static async update(gameId, gameData) {
         try {
             const { data, error } = await supabase
-                .from('Games')
+                .from('games')
                 .update({
                     GameTitle: gameData.GameTitle,
                     Platform: gameData.Platform,
@@ -104,7 +104,7 @@ class Game {
     static async delete(gameId) {
         try {
             const { error } = await supabase
-                .from('Games')
+                .from('games')
                 .delete()
                 .eq('GameID', gameId);
             
@@ -118,10 +118,10 @@ class Game {
     static async getAvailablePhysicalCopiesByCopyId(copyId) {
         try {
             const { data, error } = await supabase
-                .from('PhysicalCopies')
+                .from('physicalcopies')
                 .select(`
                     *,
-                    Games (GameTitle, Platform, Genre, PhysicalPrice)
+                    games (GameTitle, Platform, Genre, PhysicalPrice)
                 `)
                 .eq('CopyID', copyId)
                 .eq('Availability', 'Available')
@@ -137,7 +137,7 @@ class Game {
     static async getAvailablePhysicalCopies(gameId) {
         try {
             const { data, error } = await supabase
-                .from('PhysicalCopies')
+                .from('physicalcopies')
                 .select('*')
                 .eq('GameID', gameId)
                 .eq('Availability', 'Available');
@@ -152,10 +152,10 @@ class Game {
     static async getAvailableDigitalCopiesByCopyId(copyId) {
         try {
             const { data, error } = await supabase
-                .from('DigitalCopies')
+                .from('digitalcopies')
                 .select(`
                     *,
-                    Games (GameTitle, Platform, Genre)
+                    games (GameTitle, Platform, Genre)
                 `)
                 .eq('CopyID', copyId)
                 .eq('Availability', 'Available')
@@ -171,7 +171,7 @@ class Game {
     static async getAvailableDigitalCopies(gameId) {
         try {
             const { data, error } = await supabase
-                .from('DigitalCopies')
+                .from('digitalcopies')
                 .select('*')
                 .eq('GameID', gameId)
                 .eq('Availability', 'Available');

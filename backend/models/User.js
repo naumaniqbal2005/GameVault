@@ -1,23 +1,47 @@
 const { supabase } = require('../config/db');
+const bcrypt = require('bcryptjs');
 
 class User {
     static async create(userData) {
         try {
+            // Hash password before storing
+            const hashedPassword = await bcrypt.hash(userData.Password, 10);
+            
+            // Generate a unique UserID
+            const userId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+            
+            console.log('Attempting to insert user:', { UserID: userId, Email: userData.Email });
+            
             const { data, error } = await supabase
-                .from('Users')
+                .from('users')
                 .insert([{
-                    UserID: userData.UserID,
+                    UserID: userId,
                     FullName: userData.FullName,
                     Email: userData.Email,
+                    Password: hashedPassword,
                     AccountStatus: userData.AccountStatus || 'Active',
                     isAdmin: userData.isAdmin || false
                 }])
-                .select()
-                .single();
+                .select();
             
-            if (error) throw error;
-            return data;
+            if (error) {
+                console.error('Insert error:', error);
+                throw error;
+            }
+            
+            console.log('Insert successful, data:', data);
+            
+            // Return the user data with the password (for token generation)
+            return {
+                UserID: userId,
+                FullName: userData.FullName,
+                Email: userData.Email,
+                Password: hashedPassword,
+                AccountStatus: userData.AccountStatus || 'Active',
+                isAdmin: userData.isAdmin || false
+            };
         } catch (error) {
+            console.error('Create user error:', error);
             throw error;
         }
     }
@@ -25,7 +49,7 @@ class User {
     static async findById(userId) {
         try {
             const { data, error } = await supabase
-                .from('Users')
+                .from('users')
                 .select('*')
                 .eq('UserID', userId)
                 .single();
@@ -39,15 +63,22 @@ class User {
 
     static async findByEmail(email) {
         try {
+            console.log('Finding user by email:', email);
             const { data, error } = await supabase
-                .from('Users')
+                .from('users')
                 .select('*')
                 .eq('Email', email)
-                .single();
+                .maybeSingle();
             
-            if (error) throw error;
+            if (error) {
+                console.error('FindByEmail error:', error);
+                throw error;
+            }
+            
+            console.log('FindByEmail result:', data);
             return data;
         } catch (error) {
+            console.error('FindByEmail catch:', error);
             throw error;
         }
     }
@@ -55,7 +86,7 @@ class User {
     static async update(userId, userData) {
         try {
             const { data, error } = await supabase
-                .from('Users')
+                .from('users')
                 .update({
                     FullName: userData.FullName,
                     Email: userData.Email,
@@ -76,7 +107,7 @@ class User {
     static async getAll() {
         try {
             const { data, error } = await supabase
-                .from('Users')
+                .from('users')
                 .select('*')
                 .order('FullName');
             
@@ -90,7 +121,7 @@ class User {
     static async delete(userId) {
         try {
             const { error } = await supabase
-                .from('Users')
+                .from('users')
                 .delete()
                 .eq('UserID', userId);
             
@@ -99,6 +130,10 @@ class User {
         } catch (error) {
             throw error;
         }
+    }
+
+    static async comparePassword(plainPassword, hashedPassword) {
+        return await bcrypt.compare(plainPassword, hashedPassword);
     }
 }
 

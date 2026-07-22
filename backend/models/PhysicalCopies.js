@@ -5,7 +5,7 @@ class PhysicalCopy {
         try {
             // Generate a unique CopyID
             const { data: maxData } = await supabase
-                .from('PhysicalCopies')
+                .from('physicalcopies')
                 .select('CopyID')
                 .order('CopyID', { ascending: false })
                 .limit(1)
@@ -14,7 +14,7 @@ class PhysicalCopy {
             const newCopyId = maxData ? maxData.CopyID + 1 : 1;
             
             const { data, error } = await supabase
-                .from('PhysicalCopies')
+                .from('physicalcopies')
                 .insert([{
                     CopyID: newCopyId,
                     GameID: copyData.GameID,
@@ -34,7 +34,7 @@ class PhysicalCopy {
     static async findByGameId(gameId) {
         try {
             const { data, error } = await supabase
-                .from('PhysicalCopies')
+                .from('physicalcopies')
                 .select('*')
                 .eq('GameID', gameId);
             
@@ -48,7 +48,7 @@ class PhysicalCopy {
     static async findAvailable(gameId) {
         try {
             const { data, error } = await supabase
-                .from('PhysicalCopies')
+                .from('physicalcopies')
                 .select('*')
                 .eq('GameID', gameId)
                 .eq('Availability', 'Available');

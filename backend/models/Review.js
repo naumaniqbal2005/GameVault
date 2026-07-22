@@ -4,7 +4,7 @@ class Review {
     static async create(reviewData) {
         try {
             const { data, error } = await supabase
-                .from('Reviews')
+                .from('reviews')
                 .insert([{
                     ReviewID: reviewData.ReviewID,
                     UserID: reviewData.UserID,
@@ -26,11 +26,11 @@ class Review {
     static async findById(reviewId) {
         try {
             const { data, error } = await supabase
-                .from('Reviews')
+                .from('reviews')
                 .select(`
                     *,
-                    Users (FullName),
-                    Games (GameTitle)
+                    users (FullName),
+                    games (GameTitle)
                 `)
                 .eq('ReviewID', reviewId)
                 .single();
@@ -40,8 +40,8 @@ class Review {
             // Transform the nested data structure
             return {
                 ...data,
-                UserName: data.Users?.FullName,
-                GameTitle: data.Games?.GameTitle
+                UserName: data.users?.FullName,
+                GameTitle: data.games?.GameTitle
             };
         } catch (error) {
             throw error;
@@ -51,10 +51,10 @@ class Review {
     static async findByGameId(gameId) {
         try {
             const { data, error } = await supabase
-                .from('Reviews')
+                .from('reviews')
                 .select(`
                     *,
-                    Users (FullName)
+                    users (FullName)
                 `)
                 .eq('GameID', gameId)
                 .order('ReviewID', { ascending: false });
@@ -64,7 +64,7 @@ class Review {
             // Transform the nested data structure
             return data.map(review => ({
                 ...review,
-                UserName: review.Users?.FullName
+                UserName: review.users?.FullName
             }));
         } catch (error) {
             throw error;
@@ -74,10 +74,10 @@ class Review {
     static async findByUserId(userId) {
         try {
             const { data, error } = await supabase
-                .from('Reviews')
+                .from('reviews')
                 .select(`
                     *,
-                    Games (GameTitle)
+                    games (GameTitle)
                 `)
                 .eq('UserID', userId)
                 .order('ReviewID', { ascending: false });
@@ -87,7 +87,7 @@ class Review {
             // Transform the nested data structure
             return data.map(review => ({
                 ...review,
-                GameTitle: review.Games?.GameTitle
+                GameTitle: review.games?.GameTitle
             }));
         } catch (error) {
             throw error;
@@ -97,7 +97,7 @@ class Review {
     static async update(reviewId, reviewData) {
         try {
             const { data, error } = await supabase
-                .from('Reviews')
+                .from('reviews')
                 .update({
                     Rating: reviewData.Rating,
                     ReviewText: reviewData.ReviewText
@@ -116,7 +116,7 @@ class Review {
     static async delete(reviewId) {
         try {
             const { error } = await supabase
-                .from('Reviews')
+                .from('reviews')
                 .delete()
                 .eq('ReviewID', reviewId);
             
@@ -130,7 +130,7 @@ class Review {
     static async getAverageRating(gameId) {
         try {
             const { data, error } = await supabase
-                .from('Reviews')
+                .from('reviews')
                 .select('Rating')
                 .eq('GameID', gameId);
             
@@ -154,10 +154,10 @@ class Review {
         try {
             // Get rentals that have been returned for this user and game
             const { data: rentals, error: rentalError } = await supabase
-                .from('Rentals')
+                .from('rentals')
                 .select(`
                     RentalID,
-                    DigitalCopies (GameID)
+                    digitalcopies (GameID)
                 `)
                 .eq('UserID', userId)
                 .not('DateReturned', 'is', null);
@@ -165,13 +165,13 @@ class Review {
             if (rentalError) throw rentalError;
             
             // Filter rentals for the specific game
-            const gameRentals = rentals.filter(r => r.DigitalCopies?.GameID === gameId);
+            const gameRentals = rentals.filter(r => r.digitalcopies?.GameID === gameId);
             
             if (gameRentals.length === 0) return false;
             
             // Check if user has already reviewed this game
             const { data: existingReviews, error: reviewError } = await supabase
-                .from('Reviews')
+                .from('reviews')
                 .select('RentalID')
                 .eq('UserID', userId)
                 .eq('GameID', gameId);
@@ -191,11 +191,11 @@ class Review {
     static async getAll() {
         try {
             const { data, error } = await supabase
-                .from('Reviews')
+                .from('reviews')
                 .select(`
                     *,
-                    Users (FullName),
-                    Games (GameTitle)
+                    users (FullName),
+                    games (GameTitle)
                 `)
                 .order('ReviewID', { ascending: false });
             
@@ -204,8 +204,8 @@ class Review {
             // Transform the nested data structure
             return data.map(review => ({
                 ...review,
-                UserName: review.Users?.FullName,
-                GameTitle: review.Games?.GameTitle
+                UserName: review.users?.FullName,
+                GameTitle: review.games?.GameTitle
             }));
         } catch (error) {
             throw error;

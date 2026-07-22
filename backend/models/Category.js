@@ -4,7 +4,7 @@ class Category {
     static async create(categoryData) {
         try {
             const { data, error } = await supabase
-                .from('Categories')
+                .from('categories')
                 .insert([{
                     CategoryID: categoryData.CategoryID,
                     CategoryName: categoryData.CategoryName
@@ -22,7 +22,7 @@ class Category {
     static async findById(categoryId) {
         try {
             const { data, error } = await supabase
-                .from('Categories')
+                .from('categories')
                 .select('*')
                 .eq('CategoryID', categoryId)
                 .single();
@@ -37,7 +37,7 @@ class Category {
     static async getAll() {
         try {
             const { data, error } = await supabase
-                .from('Categories')
+                .from('categories')
                 .select('*')
                 .order('CategoryName');
             
@@ -51,7 +51,7 @@ class Category {
     static async update(categoryId, categoryData) {
         try {
             const { data, error } = await supabase
-                .from('Categories')
+                .from('categories')
                 .update({
                     CategoryName: categoryData.CategoryName
                 })
@@ -69,7 +69,7 @@ class Category {
     static async delete(categoryId) {
         try {
             const { error } = await supabase
-                .from('Categories')
+                .from('categories')
                 .delete()
                 .eq('CategoryID', categoryId);
             

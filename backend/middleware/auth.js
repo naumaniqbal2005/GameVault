@@ -1,7 +1,9 @@
-const { supabase } = require('../config/db');
+const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-// Middleware to verify Supabase JWT token
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+
+// Middleware to verify JWT token
 const verifyToken = async (req, res, next) => {
   const token = req.header('Authorization')?.replace('Bearer ', '');
 
@@ -10,15 +12,11 @@ const verifyToken = async (req, res, next) => {
   }
 
   try {
-    // Verify token with Supabase
-    const { data: { user }, error } = await supabase.auth.getUser(token);
+    // Verify JWT token
+    const decoded = jwt.verify(token, JWT_SECRET);
     
-    if (error || !user) {
-      return res.status(401).json({ error: 'Invalid token.' });
-    }
-
-    // Get user from our Users table using Supabase auth ID as UserID
-    const dbUser = await User.findById(user.id);
+    // Get user from our Users table
+    const dbUser = await User.findById(decoded.userId);
     
     if (!dbUser) {
       return res.status(404).json({ error: 'User not found in system.' });

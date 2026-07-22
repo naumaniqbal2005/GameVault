@@ -25,75 +25,64 @@ export default function GameList({ user }) {
 
   return (
     <div>
-      <div className="page-header">
-        <div>
-          <div className="page-title">GAME CATALOG</div>
-          <div className="page-sub">{games.length} titles available</div>
+      <div className="catalog-container">
+        <div className="page-header">
+          <div>
+            <div className="page-title">GAME CATALOG</div>
+            <div className="page-sub">{games.length} titles available</div>
+          </div>
         </div>
-      </div>
 
-      <div className="search-bar">
-        <div className="search-wrap">
-          <span className="search-icon">🔍</span>
-          <input className="search-input" placeholder="Search games by title..." value={search}
-            onChange={e => setSearch(e.target.value)} />
+        <div className="search-bar">
+          <div className="search-wrap">
+            <span className="search-icon">🔍</span>
+            <input className="search-input" placeholder="Search games by title..." value={search}
+              onChange={e => setSearch(e.target.value)} />
+          </div>
+          {search && <button className="btn btn-ghost btn-sm" onClick={() => setSearch('')}>Clear</button>}
         </div>
-        {search && <button className="btn btn-ghost btn-sm" onClick={() => setSearch('')}>Clear</button>}
-      </div>
 
-      {loading ? (
-        <div className="loading"><div className="spinner" /> Loading catalog...</div>
-      ) : games.length === 0 ? (
-        <div className="empty"><div className="empty-icon">🕹️</div><p>No games found</p></div>
-      ) : (
-        <div className="game-grid">
-          {games.map((g, i) => {
-            const cover = COVERS[g.GameTitle];
-            const hasImg = cover && !imgErrors[g.GameID];
-            return (
-              <div className="game-card" key={g.GameID || i}>
-                <div
-                  className={`game-card-banner ${!hasImg ? BANNERS[i % BANNERS.length] : ''}`}
-                  style={hasImg ? {
-                    backgroundImage: `url(${cover})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                  } : {}}
-                >
-                  {!hasImg && (
-                    <span style={{ position: 'relative', zIndex: 1 }}>{EMOJIS[i % EMOJIS.length]}</span>
-                  )}
-                  {hasImg && (
-                    <img
-                      src={cover}
-                      alt={g.GameTitle}
-                      onError={() => setImgErrors(prev => ({ ...prev, [g.GameID]: true }))}
-                      style={{ display: 'none' }}
-                    />
-                  )}
-                </div>
-                <div className="game-card-body">
-                  <div className="game-card-title">{g.GameTitle}</div>
-                  <div className="game-tags">
-                    {g.Platform && <span className="tag tag-platform">{g.Platform}</span>}
-                    {g.Genre && <span className="tag tag-genre">{g.Genre}</span>}
+        {loading ? (
+          <div className="loading"><div className="spinner" /> Loading catalog...</div>
+        ) : games.length === 0 ? (
+          <div className="empty"><div className="empty-icon">🕹️</div><p>No games found</p></div>
+        ) : (
+          <div className="game-grid">
+            {games.map((game, idx) => (
+              <div key={game.GameID || idx} className="game-card">
+                {game.Image ? (
+                  <div className="game-card-banner" style={{ backgroundImage: `url(${game.Image})`, backgroundSize: 'cover', backgroundPosition: 'center' }}></div>
+                ) : (
+                  <div className={`game-card-banner ${BANNERS[idx % BANNERS.length]}`}>
+                    {EMOJIS[idx % EMOJIS.length]}
                   </div>
-                  <div className="game-prices">
+                )}
+                <div className="game-card-body">
+                  <div className="game-card-title">{game.GameTitle}</div>
+                  <div className="game-card-row">
+                    <span className="tag tag-platform">{game.Platform}</span>
+                    <span className="tag tag-genre">{game.Genre}</span>
+                  </div>
+                  <div className="game-card-row">
                     <div className="price-block">
-                      <div className="price-label">Rent / day</div>
-                      <div className="price-val">{g.DigitalRentalPrice ? `$${Number(g.DigitalRentalPrice).toFixed(2)}` : '—'}</div>
+                      <div className="price-label">Physical</div>
+                      <div className="price-val">${game.PhysicalPrice}</div>
                     </div>
                     <div className="price-block">
-                      <div className="price-label">Buy</div>
-                      <div className="price-val">{g.PhysicalPrice ? `$${Number(g.PhysicalPrice).toFixed(2)}` : '—'}</div>
+                      <div className="price-label">Digital</div>
+                      <div className="price-val">${game.DigitalRentalPrice}</div>
                     </div>
+                  </div>
+                  <div className="game-card-row game-card-actions">
+                    <button className="btn btn-cyan btn-sm">Rent</button>
+                    <button className="btn btn-orange btn-sm">Buy</button>
                   </div>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -41,7 +41,7 @@ const PORT = 5000;
 
 
 app.get('/', (req, res) => {
-    res.send('Hello from Node.js Backend!');
+    res.send('Server is up!');
 });
 
 app.listen(PORT, () => {

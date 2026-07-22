@@ -4,7 +4,7 @@ class Transaction {
     static async create(transactionData) {
         try {
             const { data, error } = await supabase
-                .from('Transactions')
+                .from('transactions')
                 .insert([{
                     TransactionID: transactionData.TransactionID,
                     UserID: transactionData.UserID,
@@ -28,10 +28,10 @@ class Transaction {
     static async findById(transactionId) {
         try {
             const { data, error } = await supabase
-                .from('Transactions')
+                .from('transactions')
                 .select(`
                     *,
-                    Users (FullName)
+                    users (FullName)
                 `)
                 .eq('TransactionID', transactionId)
                 .single();
@@ -41,7 +41,7 @@ class Transaction {
             // Transform the nested data structure
             return {
                 ...data,
-                UserName: data.Users?.FullName
+                UserName: data.users?.FullName
             };
         } catch (error) {
             throw error;
@@ -51,7 +51,7 @@ class Transaction {
     static async findByUserId(userId) {
         try {
             const { data, error } = await supabase
-                .from('Transactions')
+                .from('transactions')
                 .select('*')
                 .eq('UserID', userId)
                 .order('TransactionDate', { ascending: false });
@@ -71,10 +71,10 @@ class Transaction {
     static async getAll() {
         try {
             const { data, error } = await supabase
-                .from('Transactions')
+                .from('transactions')
                 .select(`
                     *,
-                    Users (FullName)
+                    users (FullName)
                 `)
                 .order('TransactionDate', { ascending: false });
             
@@ -83,7 +83,7 @@ class Transaction {
             // Transform the nested data structure and add transaction type
             return data.map(t => ({
                 ...t,
-                UserName: t.Users?.FullName,
+                UserName: t.users?.FullName,
                 TransactionType: t.RentalID ? 'Rental' : (t.CopyID ? 'Purchase' : 'Other')
             }));
         } catch (error) {
@@ -94,13 +94,13 @@ class Transaction {
     static async getRentalTransactions() {
         try {
             const { data, error } = await supabase
-                .from('Transactions')
+                .from('transactions')
                 .select(`
                     *,
-                    Users (FullName),
-                    Rentals (CopyID),
-                    Rentals!inner (DigitalCopies (GameID)),
-                    DigitalCopies!inner (Games (GameTitle))
+                    users (FullName),
+                    rentals (CopyID),
+                    rentals!inner (digitalcopies (GameID)),
+                    digitalcopies!inner (games (GameTitle))
                 `)
                 .not('RentalID', 'is', null)
                 .order('TransactionDate', { ascending: false });
@@ -110,8 +110,8 @@ class Transaction {
             // Transform the nested data structure
             return data.map(t => ({
                 ...t,
-                UserName: t.Users?.FullName,
-                GameTitle: t.Rentals?.DigitalCopies?.Games?.GameTitle
+                UserName: t.users?.FullName,
+                GameTitle: t.rentals?.digitalcopies?.games?.GameTitle
             }));
         } catch (error) {
             throw error;
@@ -121,12 +121,12 @@ class Transaction {
     static async getPurchaseTransactions() {
         try {
             const { data, error } = await supabase
-                .from('Transactions')
+                .from('transactions')
                 .select(`
                     *,
-                    Users (FullName),
-                    PhysicalCopies (GameID),
-                    PhysicalCopies!inner (Games (GameTitle))
+                    users (FullName),
+                    physicalcopies (GameID),
+                    physicalcopies!inner (games (GameTitle))
                 `)
                 .not('CopyID', 'is', null)
                 .order('TransactionDate', { ascending: false });
@@ -136,8 +136,8 @@ class Transaction {
             // Transform the nested data structure
             return data.map(t => ({
                 ...t,
-                UserName: t.Users?.FullName,
-                GameTitle: t.PhysicalCopies?.Games?.GameTitle
+                UserName: t.users?.FullName,
+                GameTitle: t.physicalcopies?.games?.GameTitle
             }));
         } catch (error) {
             throw error;
@@ -147,7 +147,7 @@ class Transaction {
     static async getTransactionStats(startDate, endDate) {
         try {
             const { data, error } = await supabase
-                .from('Transactions')
+                .from('transactions')
                 .select('Amount, DiscountApplied, TransactionDate')
                 .gte('TransactionDate', startDate)
                 .lte('TransactionDate', endDate);

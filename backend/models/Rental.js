@@ -24,7 +24,7 @@ class Rental {
         try {
             // Create rental record
             const { data: rental, error: rentalError } = await supabase
-                .from('Rentals')
+                .from('rentals')
                 .insert([{
                     RentalID: rentalData.RentalID,
                     UserID: rentalData.UserID,
@@ -39,7 +39,7 @@ class Rental {
 
             // Update digital copy availability
             const { error: updateError } = await supabase
-                .from('DigitalCopies')
+                .from('digitalcopies')
                 .update({ Availability: 'Rented' })
                 .eq('CopyID', rentalData.CopyID);
             
@@ -54,12 +54,14 @@ class Rental {
     static async findById(rentalId) {
         try {
             const { data, error } = await supabase
-                .from('Rentals')
+                .from('rentals')
                 .select(`
                     *,
-                    Users (FullName, Email),
-                    DigitalCopies (GameID),
-                    DigitalCopies!inner (Games (GameTitle, Platform, Genre))
+                    users (FullName, Email),
+                    digitalcopies (
+                        GameID,
+                        games (GameTitle, Platform, Genre)
+                    )
                 `)
                 .eq('RentalID', rentalId)
                 .single();
@@ -69,11 +71,11 @@ class Rental {
             // Transform the nested data structure
             const rental = {
                 ...data,
-                UserName: data.Users?.FullName,
-                UserEmail: data.Users?.Email,
-                GameTitle: data.DigitalCopies?.Games?.GameTitle,
-                Platform: data.DigitalCopies?.Games?.Platform,
-                Genre: data.DigitalCopies?.Games?.Genre,
+                UserName: data.users?.FullName,
+                UserEmail: data.users?.Email,
+                GameTitle: data.digitalcopies?.games?.GameTitle,
+                Platform: data.digitalcopies?.games?.Platform,
+                Genre: data.digitalcopies?.games?.Genre,
                 ...calculateRentalInfo(data)
             };
             
@@ -86,12 +88,14 @@ class Rental {
     static async findByUserId(userId) {
         try {
             const { data, error } = await supabase
-                .from('Rentals')
+                .from('rentals')
                 .select(`
                     *,
-                    Users (FullName, Email),
-                    DigitalCopies (GameID),
-                    DigitalCopies!inner (Games (GameTitle, Platform, Genre))
+                    users (FullName, Email),
+                    digitalcopies (
+                        GameID,
+                        games (GameTitle, Platform, Genre)
+                    )
                 `)
                 .eq('UserID', userId)
                 .order('DateIssued', { ascending: false });
@@ -101,11 +105,11 @@ class Rental {
             // Transform the nested data structure
             return data.map(rental => ({
                 ...rental,
-                UserName: rental.Users?.FullName,
-                UserEmail: rental.Users?.Email,
-                GameTitle: rental.DigitalCopies?.Games?.GameTitle,
-                Platform: rental.DigitalCopies?.Games?.Platform,
-                Genre: rental.DigitalCopies?.Games?.Genre,
+                UserName: rental.users?.FullName,
+                UserEmail: rental.users?.Email,
+                GameTitle: rental.digitalcopies?.games?.GameTitle,
+                Platform: rental.digitalcopies?.games?.Platform,
+                Genre: rental.digitalcopies?.games?.Genre,
                 ...calculateRentalInfo(rental)
             }));
         } catch (error) {
@@ -116,12 +120,14 @@ class Rental {
     static async getActiveRentals(userId) {
         try {
             const { data, error } = await supabase
-                .from('Rentals')
+                .from('rentals')
                 .select(`
                     *,
-                    Users (FullName, Email),
-                    DigitalCopies (GameID),
-                    DigitalCopies!inner (Games (GameTitle, Platform, Genre))
+                    users (FullName, Email),
+                    digitalcopies (
+                        GameID,
+                        games (GameTitle, Platform, Genre)
+                    )
                 `)
                 .eq('UserID', userId)
                 .is('DateReturned', null)
@@ -132,11 +138,11 @@ class Rental {
             // Transform the nested data structure
             return data.map(rental => ({
                 ...rental,
-                UserName: rental.Users?.FullName,
-                UserEmail: rental.Users?.Email,
-                GameTitle: rental.DigitalCopies?.Games?.GameTitle,
-                Platform: rental.DigitalCopies?.Games?.Platform,
-                Genre: rental.DigitalCopies?.Games?.Genre,
+                UserName: rental.users?.FullName,
+                UserEmail: rental.users?.Email,
+                GameTitle: rental.digitalcopies?.games?.GameTitle,
+                Platform: rental.digitalcopies?.games?.Platform,
+                Genre: rental.digitalcopies?.games?.Genre,
                 ...calculateRentalInfo(rental)
             }));
         } catch (error) {
@@ -148,7 +154,7 @@ class Rental {
         try {
             // Get rental details
             const { data: rental, error: rentalError } = await supabase
-                .from('Rentals')
+                .from('rentals')
                 .select('CopyID')
                 .eq('RentalID', rentalId)
                 .single();
@@ -160,7 +166,7 @@ class Rental {
 
             // Update rental with return date
             const { error: updateError } = await supabase
-                .from('Rentals')
+                .from('rentals')
                 .update({ DateReturned: new Date() })
                 .eq('RentalID', rentalId);
             
@@ -168,7 +174,7 @@ class Rental {
 
             // Update digital copy availability
             const { error: copyError } = await supabase
-                .from('DigitalCopies')
+                .from('digitalcopies')
                 .update({ Availability: 'Available' })
                 .eq('CopyID', copyId);
             
@@ -183,12 +189,14 @@ class Rental {
     static async getAll() {
         try {
             const { data, error } = await supabase
-                .from('Rentals')
+                .from('rentals')
                 .select(`
                     *,
-                    Users (FullName, Email),
-                    DigitalCopies (GameID),
-                    DigitalCopies!inner (Games (GameTitle, Platform, Genre))
+                    users (FullName, Email),
+                    digitalcopies (
+                        GameID,
+                        games (GameTitle, Platform, Genre)
+                    )
                 `)
                 .order('DateIssued', { ascending: false });
             
@@ -197,11 +205,11 @@ class Rental {
             // Transform the nested data structure
             return data.map(rental => ({
                 ...rental,
-                UserName: rental.Users?.FullName,
-                UserEmail: rental.Users?.Email,
-                GameTitle: rental.DigitalCopies?.Games?.GameTitle,
-                Platform: rental.DigitalCopies?.Games?.Platform,
-                Genre: rental.DigitalCopies?.Games?.Genre,
+                UserName: rental.users?.FullName,
+                UserEmail: rental.users?.Email,
+                GameTitle: rental.digitalcopies?.games?.GameTitle,
+                Platform: rental.digitalcopies?.games?.Platform,
+                Genre: rental.digitalcopies?.games?.Genre,
                 ...calculateRentalInfo(rental)
             }));
         } catch (error) {
@@ -212,12 +220,14 @@ class Rental {
     static async getOverdueRentals() {
         try {
             const { data, error } = await supabase
-                .from('Rentals')
+                .from('rentals')
                 .select(`
                     *,
-                    Users (FullName, Email),
-                    DigitalCopies (GameID),
-                    DigitalCopies!inner (Games (GameTitle, Platform, Genre))
+                    users (FullName, Email),
+                    digitalcopies (
+                        GameID,
+                        games (GameTitle, Platform, Genre)
+                    )
                 `)
                 .is('DateReturned', null)
                 .lt('DateDue', new Date().toISOString())
@@ -228,11 +238,11 @@ class Rental {
             // Transform the nested data structure
             return data.map(rental => ({
                 ...rental,
-                UserName: rental.Users?.FullName,
-                UserEmail: rental.Users?.Email,
-                GameTitle: rental.DigitalCopies?.Games?.GameTitle,
-                Platform: rental.DigitalCopies?.Games?.Platform,
-                Genre: rental.DigitalCopies?.Games?.Genre,
+                UserName: rental.users?.FullName,
+                UserEmail: rental.users?.Email,
+                GameTitle: rental.digitalcopies?.games?.GameTitle,
+                Platform: rental.digitalcopies?.games?.Platform,
+                Genre: rental.digitalcopies?.games?.Genre,
                 rentalStatus: 'LATE',
                 ...calculateRentalInfo(rental)
             }));
@@ -245,7 +255,7 @@ class Rental {
         try {
             // Get rental details before deletion
             const { data: rental, error: rentalError } = await supabase
-                .from('Rentals')
+                .from('rentals')
                 .select('CopyID')
                 .eq('RentalID', rentalId)
                 .single();
@@ -257,7 +267,7 @@ class Rental {
 
             // Update digital copy availability back to 'Available'
             const { error: copyError } = await supabase
-                .from('DigitalCopies')
+                .from('digitalcopies')
                 .update({ Availability: 'Available' })
                 .eq('CopyID', copyId);
             
@@ -265,7 +275,7 @@ class Rental {
 
             // Delete the rental record
             const { error: deleteError } = await supabase
-                .from('Rentals')
+                .from('rentals')
                 .delete()
                 .eq('RentalID', rentalId);
             

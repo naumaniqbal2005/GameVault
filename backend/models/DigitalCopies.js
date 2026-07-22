@@ -5,7 +5,7 @@ class DigitalCopy {
         try {
             // Generate a unique CopyID
             const { data: maxData } = await supabase
-                .from('DigitalCopies')
+                .from('digitalcopies')
                 .select('CopyID')
                 .order('CopyID', { ascending: false })
                 .limit(1)
@@ -14,7 +14,7 @@ class DigitalCopy {
             const newCopyId = maxData ? maxData.CopyID + 1 : 1;
             
             const { data, error } = await supabase
-                .from('DigitalCopies')
+                .from('digitalcopies')
                 .insert([{
                     CopyID: newCopyId,
                     GameID: copyData.GameID,
@@ -33,7 +33,7 @@ class DigitalCopy {
     static async findByGameId(gameId) {
         try {
             const { data, error } = await supabase
-                .from('DigitalCopies')
+                .from('digitalcopies')
                 .select('*')
                 .eq('GameID', gameId);
             
@@ -47,7 +47,7 @@ class DigitalCopy {
     static async findAvailable(gameId) {
         try {
             const { data, error } = await supabase
-                .from('DigitalCopies')
+                .from('digitalcopies')
                 .select('*')
                 .eq('GameID', gameId)
                 .eq('Availability', 'Available');
