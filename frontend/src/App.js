@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Gamepad2, ShoppingCart, Star, FlaskConical, Clock, History, Calendar, LayoutDashboard, Users, Package, Receipt, CreditCard, UserCheck, ListTodo, Bell, Phone, MessageCircle, ShoppingCart as Cart } from 'lucide-react';
 import Waves from './component/Waves';
 import GameList from './components/GameList';
 import RentGame from './components/RentGame';
@@ -22,6 +23,7 @@ export default function App() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [token, setToken] = useState(null);
+  const [selectedGame, setSelectedGame] = useState(null);
 
   // Check for saved user session on app load
   useEffect(() => {
@@ -130,30 +132,47 @@ export default function App() {
   };
 
   const userNavItems = [
-    { id: 'games', label: 'Catalog' },
-    { id: 'rent', label: 'Rent' },
-    { id: 'purchase', label: 'Purchase' },
-    { id: 'review', label: 'Reviews' },
-    { id: 'test', label: 'Test' },
-    { id: 'digital-waitlist', label: 'Digital Waitlist' },
-    { id: 'physical-waitlist', label: 'Physical Waitlist' },
-    { id: 'purchase-history', label: 'Purchase History' },
-    { id: 'upcoming-catalogue', label: 'Upcoming' },
+    { id: 'games', label: 'Catalog', icon: Gamepad2 },
+    { id: 'rent', label: 'Rent', icon: ShoppingCart },
+    { id: 'purchase', label: 'Purchase', icon: ShoppingCart },
+    { id: 'review', label: 'Reviews', icon: Star },
+    { id: 'test', label: 'Test', icon: FlaskConical },
+    { id: 'digital-waitlist', label: 'Digital Waitlist', icon: Clock },
+    { id: 'physical-waitlist', label: 'Physical Waitlist', icon: Clock },
+    { id: 'purchase-history', label: 'Purchase History', icon: History },
+    { id: 'upcoming-catalogue', label: 'Upcoming', icon: Calendar },
   ];
 
   const adminNavItems = [
-    { id: 'admin', label: 'Dashboard' },
-    { id: 'admin-users', label: 'Users' },
-    { id: 'admin-games', label: 'Games' },
-    { id: 'admin-rentals', label: 'Rentals' },
-    { id: 'admin-transactions', label: 'Transactions' },
-    { id: 'admin-membership', label: 'Membership' },
-    { id: 'admin-wishlist', label: 'Waitlist' },
+    { id: 'admin', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'admin-users', label: 'Users', icon: Users },
+    { id: 'admin-games', label: 'Games', icon: Package },
+    { id: 'admin-rentals', label: 'Rentals', icon: Receipt },
+    { id: 'admin-transactions', label: 'Transactions', icon: CreditCard },
+    { id: 'admin-membership', label: 'Membership', icon: UserCheck },
+    { id: 'admin-wishlist', label: 'Waitlist', icon: ListTodo },
   ];
 
   if (!user) {
     return (
-      <div className="auth-page">
+      <div className="auth-page" style={{
+        position: 'relative',
+        minHeight: '100vh'
+      }}>
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundImage: 'url(/bg.png)',
+          backgroundSize: '150%',
+          backgroundPosition: 'center 30%',
+          backgroundRepeat: 'no-repeat',
+          backgroundAttachment: 'fixed',
+          opacity: 0.6,
+          zIndex: -1
+        }} />
         <div className="auth-glow" />
         <div className="auth-box">
           <div className="brand-name" style={{textAlign: 'center', marginBottom: '0.4rem'}}>GameVault</div>
@@ -191,14 +210,33 @@ export default function App() {
   }
 
   return (
-    <>
+    <div style={{
+      position: 'relative',
+      minHeight: '100vh'
+    }}>
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundImage: 'url(/bg.png)',
+        backgroundSize: '150%',
+        backgroundPosition: 'center 30%',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed',
+        opacity: 0.6,
+        zIndex: -1
+      }} />
       <nav className="navbar">
         <div className="brand" onClick={() => setPage('games')}>
           <span className="brand-name">GameVault</span>
+          <span className="brand-tagline">Your Gaming Hub</span>
         </div>
         <div className="nav-links">
           {(user?.isAdmin ? adminNavItems : userNavItems).map(n => (
             <button key={n.id} className={`nav-btn ${page === n.id ? 'active' : ''}`} onClick={() => setPage(n.id)}>
+              {n.icon && <n.icon size={18} style={{ marginRight: '0.5rem' }} />}
               {n.label}
             </button>
           ))}
@@ -212,8 +250,8 @@ export default function App() {
         </div>
       </nav>
       <div className="main">
-        {page === 'games' && <GameList user={user} />}
-        {page === 'rent' && <RentGame user={user} />}
+        {page === 'games' && <GameList user={user} setSelectedGame={(game) => { setSelectedGame(game); setPage('rent'); }} />}
+        {page === 'rent' && <RentGame user={user} selectedGame={selectedGame} />}
         {page === 'review' && <ReviewGame user={user} />}
         {page === 'test' && <Test />}
         {user?.isAdmin && page === 'admin' && <AdminDashboard />}
@@ -222,7 +260,21 @@ export default function App() {
         {user?.isAdmin && page === 'admin-rentals' && <AdminRentals />}
         {user?.isAdmin && page === 'admin-transactions' && <AdminTransactions />}
       </div>
-    </>
+      <div className="fixed-icon-bar">
+        <div className="icon-card icon-purple">
+          <Bell size={20} strokeWidth={2.5} />
+        </div>
+        <div className="icon-card icon-purple">
+          <Phone size={20} strokeWidth={2.5} />
+        </div>
+        <div className="icon-card icon-green">
+          <MessageCircle size={20} strokeWidth={2.5} />
+        </div>
+        <div className="icon-card icon-orange">
+          <Cart size={20} strokeWidth={2.5} />
+        </div>
+      </div>
+    </div>
   );
 }
 
