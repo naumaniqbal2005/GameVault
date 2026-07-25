@@ -175,32 +175,151 @@ export default function App() {
         }} />
         <div className="auth-glow" />
         <div className="auth-box">
-          <div className="brand-name" style={{textAlign: 'center', marginBottom: '0.4rem'}}>GameVault</div>
-          <div className="auth-sub">Your ultimate gaming platform</div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <Gamepad2 size={48} style={{ color: 'black', marginBottom: '0.25rem' }} />
+            <div className="brand-name" style={{ textAlign: 'center', marginBottom: '0.15rem' }}>GameVault</div>
+            <div style={{ textAlign: 'center', fontSize: '0.75rem', color: '#666', fontWeight: '600', letterSpacing: '-0.5px', fontFamily: "'Inter Tight', sans-serif" }}>The place to find the best games</div>
+          </div>
           <div className="auth-tabs">
             <button className={`auth-tab ${tab === 'login' ? 'active' : ''}`} onClick={() => { setTab('login'); setError(''); }}>Login</button>
             <button className={`auth-tab ${tab === 'register' ? 'active' : ''}`} onClick={() => { setTab('register'); setError(''); }}>Register</button>
           </div>
           {error && <div className={`alert ${error.startsWith('✓') ? 'alert-success' : 'alert-error'}`}>{error}</div>}
-          <form onSubmit={handleAuth}>
+          <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
             {tab === 'register' && (
-              <div className="form-group">
-                <label className="form-label">Full Name</label>
+              <div className="form-group" style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
+                <div style={{
+                  position: 'absolute',
+                  top: '-10px',
+                  left: '15px',
+                  background: 'red',
+                  color: 'white',
+                  border: '2px solid black',
+                  boxShadow: '2px 2px 0px 0px black',
+                  borderRadius: '8px',
+                  padding: '4px 10px',
+                  width: 'fit-content',
+                  fontWeight: '800',
+                  fontSize: '0.65rem',
+                  fontFamily: "'Inter Tight', sans-serif",
+                  letterSpacing: '1px',
+                  zIndex: 1,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  Full Name
+                </div>
                 <input className="form-input" placeholder="John Doe" value={form.fullName}
-                  onChange={e => setForm({ ...form, fullName: e.target.value })} required />
+                  onChange={e => setForm({ ...form, fullName: e.target.value })} required 
+                  style={{
+                    width: '100%',
+                    background: 'white',
+                    border: '2px solid black',
+                    boxShadow: '4px 4px 0px 0px black',
+                    borderRadius: '12px',
+                    color: 'black',
+                    fontFamily: "'Inter Tight', sans-serif",
+                    fontSize: '0.95rem',
+                    fontWeight: '600',
+                    padding: '0.75rem 1.25rem',
+                    outline: 'none',
+                    marginTop: '12px'
+                  }}
+                />
               </div>
             )}
-            <div className="form-group">
-              <label className="form-label">Email Address</label>
+            <div className="form-group" style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
+              <div style={{
+                position: 'absolute',
+                top: '-10px',
+                left: '15px',
+                background: 'red',
+                color: 'white',
+                border: '2px solid black',
+                boxShadow: '2px 2px 0px 0px black',
+                borderRadius: '8px',
+                padding: '4px 10px',
+                width: 'fit-content',
+                fontWeight: '800',
+                fontSize: '0.65rem',
+                fontFamily: "'Inter Tight', sans-serif",
+                letterSpacing: '1px',
+                zIndex: 1,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                Email Address
+              </div>
               <input className="form-input" type="email" placeholder="you@example.com" value={form.email}
-                onChange={e => setForm({ ...form, email: e.target.value })} required />
+                onChange={e => setForm({ ...form, email: e.target.value })} required 
+                style={{
+                  width: '100%',
+                  background: 'white',
+                  border: '2px solid black',
+                  boxShadow: '4px 4px 0px 0px black',
+                  borderRadius: '12px',
+                  color: 'black',
+                  fontFamily: "'Inter Tight', sans-serif",
+                  fontSize: '0.95rem',
+                  fontWeight: '600',
+                  padding: '0.75rem 1.25rem',
+                  outline: 'none',
+                  marginTop: '12px'
+                }}
+              />
             </div>
-            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-              <label className="form-label">Password</label>
+            <div className="form-group" style={{ display: 'flex', flexDirection: 'column', position: 'relative', marginBottom: '1.5rem' }}>
+              <div style={{
+                position: 'absolute',
+                top: '-10px',
+                left: '15px',
+                background: 'red',
+                color: 'white',
+                border: '2px solid black',
+                boxShadow: '2px 2px 0px 0px black',
+                borderRadius: '8px',
+                padding: '4px 10px',
+                width: 'fit-content',
+                fontWeight: '800',
+                fontSize: '0.65rem',
+                fontFamily: "'Inter Tight', sans-serif",
+                letterSpacing: '1px',
+                zIndex: 1,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                Password
+              </div>
               <input className="form-input" type="password" placeholder="••••••••" value={form.password}
-                onChange={e => setForm({ ...form, password: e.target.value })} required />
+                onChange={e => setForm({ ...form, password: e.target.value })} required 
+                style={{
+                  width: '100%',
+                  background: 'white',
+                  border: '2px solid black',
+                  boxShadow: '4px 4px 0px 0px black',
+                  borderRadius: '12px',
+                  color: 'black',
+                  fontFamily: "'Inter Tight', sans-serif",
+                  fontSize: '0.95rem',
+                  fontWeight: '600',
+                  padding: '0.75rem 1.25rem',
+                  outline: 'none',
+                  marginTop: '12px'
+                }}
+              />
             </div>
-            <button type="submit" className="btn btn-cyan btn-full" disabled={loading}>
+            <button type="submit" className="btn btn-cyan btn-full" disabled={loading}
+              style={{
+                fontFamily: "'Inter Tight', sans-serif",
+                fontWeight: '700',
+                fontSize: '0.95rem',
+                letterSpacing: '1px',
+                padding: '0.85rem'
+              }}
+            >
               {loading ? 'Please wait...' : tab === 'login' ? 'LOGIN' : 'CREATE ACCOUNT'}
             </button>
           </form>
@@ -214,20 +333,22 @@ export default function App() {
       position: 'relative',
       minHeight: '100vh'
     }}>
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundImage: 'url(/bg.png)',
-        backgroundSize: '150%',
-        backgroundPosition: 'center 30%',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed',
-        opacity: 0.6,
-        zIndex: -1
-      }} />
+      {!user?.isAdmin && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundImage: 'url(/bg.png)',
+          backgroundSize: '150%',
+          backgroundPosition: 'center 30%',
+          backgroundRepeat: 'no-repeat',
+          backgroundAttachment: 'fixed',
+          opacity: 0.6,
+          zIndex: -1
+        }} />
+      )}
       <nav className="navbar">
         <div className="brand" onClick={() => setPage('games')}>
           <span className="brand-name">GameVault</span>

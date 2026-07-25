@@ -257,6 +257,522 @@ body {
   font-weight: 500;
 }
 
+/* ADMIN DASHBOARD STYLES */
+.admin-dashboard-layout {
+  display: flex;
+  gap: 1rem;
+  height: calc(100vh - 3rem);
+}
+
+.admin-left-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 2;
+  height: 100%;
+}
+
+.admin-right-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  height: 100%;
+  min-height: 0;
+}
+
+.admin-revenue-hero {
+  background: #B374FE;
+  border: 2px solid black;
+  border-radius: 16px;
+  padding: 1.5rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 6px 6px 0px 0px black;
+  height: 100%;
+}
+
+.revenue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.revenue-content {
+  text-align: left;
+  flex: 1;
+}
+
+.revenue-label {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.5rem;
+}
+
+.revenue-amount {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: white;
+  margin-bottom: 0.5rem;
+}
+
+.revenue-trend {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.revenue-icon {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 1rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.admin-stat-card {
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid black;
+  border-radius: 10px;
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 3px 3px 0px 0px black;
+  transition: all 0.2s ease;
+}
+
+.admin-stat-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px 0px black;
+}
+
+.admin-stat-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.icon-purple {
+  background: #E9D5FF;
+  color: #9333EA;
+}
+
+.icon-green {
+  background: #D1FAE5;
+  color: #059669;
+}
+
+.icon-orange {
+  background: #FED7AA;
+  color: #EA580C;
+}
+
+.icon-cyan {
+  background: #BAE6FD;
+  color: #0284c7;
+}
+
+.admin-stat-content {
+  flex: 1;
+}
+
+.admin-stat-value {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin-bottom: 0.1rem;
+}
+
+.admin-stat-label {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.admin-chart-card {
+  background: white;
+  border: 2px solid black;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 4px 4px 0px 0px black;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+
+.admin-genre-card {
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid black;
+  border-radius: 12px;
+  padding: 0.75rem;
+  box-shadow: 3px 3px 0px 0px black;
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+}
+
+.admin-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.admin-card-title {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: #1a1a1a;
+}
+
+.admin-card-badge {
+  background: linear-gradient(135deg, #10B981, #34D399);
+  color: white;
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 2px solid black;
+  box-shadow: 2px 2px 0px 0px black;
+}
+
+.admin-chart-placeholder {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0.75rem;
+  min-height: 0;
+}
+
+.chart-bar-container {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-end;
+  height: 100%;
+  width: 100%;
+  justify-content: space-around;
+}
+
+.chart-bar-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.chart-bar {
+  width: 50px;
+  border-radius: 8px 8px 0 0;
+  border: 2px solid black;
+  box-shadow: 3px 3px 0px 0px black;
+  transition: all 0.3s ease;
+  min-height: 20px;
+}
+
+.chart-bar:hover {
+  transform: translateY(-4px);
+  box-shadow: 5px 5px 0px 0px black;
+}
+
+.chart-bar-purple {
+  background: #B374FE;
+}
+
+.chart-bar-green {
+  background: #10B981;
+}
+
+.chart-bar-orange {
+  background: #F97316;
+}
+
+.chart-label {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.admin-genre-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.genres-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.genre-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 10px;
+  border: 1px solid (0, 0, 0, 0.08)rgba;
+  height: 100%;
+}
+
+.genre-badge {
+  background: linear-gradient(135deg, #B374FE, #9333EA);
+  color: white;
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 800;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  border: 2px solid black;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  align-self: flex-start;
+}
+
+.genre-stats {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.genre-stat {
+  flex: 1;
+  background: white;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  padding: 0.5rem 0.4rem;
+  text-align: center;
+  border: 2px solid black;
+  box-shadow: 2px 2px 0px 0px black;
+}
+
+.genre-stat-value {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  display: block;
+  margin-bottom: 0.1rem;
+}
+
+.genre-stat-label {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.genre-progress {
+  width: 100%;
+  height: 6px;
+  background: #e5e5e5;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 0.25rem;
+}
+
+.genre-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #B374FE, #9333EA);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.admin-reviews-card {
+  background: white;
+  border: 2px solid black;
+  border-radius: 20px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+
+.admin-complaints-card {
+  background: white;
+  border: 2px solid black;
+  border-radius: 20px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.admin-reviews-list,
+.admin-complaints-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.admin-review-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border: 2px solid black;
+  border-radius: 16px;
+  box-shadow: 3px 3px 0px 0px black;
+}
+
+.review-avatar {
+  width: 40px;
+  height: 40px;
+  background: #B374FE;
+  border: 2px solid black;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+.review-content {
+  flex: 1;
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.review-author {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 900;
+  color: #1a1a1a;
+}
+
+.review-rating {
+  display: flex;
+  gap: 0.125rem;
+}
+
+.review-text {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #666;
+  line-height: 1.4;
+}
+
+.admin-complaint-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background: #fef2f2;
+  border: 2px solid black;
+  border-radius: 16px;
+  box-shadow: 3px 3px 0px 0px black;
+}
+
+.complaint-badge {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.complaint-high {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  color: white;
+  border: 2px solid black;
+  box-shadow: 2px 2px 0px 0px black;
+}
+
+.complaint-medium {
+  background: linear-gradient(135deg, #f97316, #fb923c);
+  color: white;
+  border: 2px solid black;
+  box-shadow: 2px 2px 0px 0px black;
+}
+
+.complaint-low {
+  background: linear-gradient(135deg, #eab308, #facc15);
+  color: white;
+  border: 2px solid black;
+  box-shadow: 2px 2px 0px 0px black;
+}
+
+.complaint-content {
+  flex: 1;
+}
+
+.complaint-title {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 900;
+  color: #1a1a1a;
+  margin-bottom: 0.25rem;
+}
+
+.complaint-time {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #666;
+}
+
 /* Dashboard Sections */
 .dashboard-sections {
   display: grid;
@@ -524,8 +1040,9 @@ body {
   position: relative;
   z-index: 1;
   margin-left: 200px;
-  padding: 2.5rem 2rem;
+  padding: 1.5rem 2rem;
   min-height: 100vh;
+  overflow: hidden;
 }
 
 /* AUTH PAGE */
@@ -553,24 +1070,15 @@ body {
 .auth-box {
   width: 100%;
   max-width: 440px;
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: white;
+  border: 2px solid black;
   border-radius: 20px;
   padding: 2.5rem;
-  box-shadow: 0 0 60px rgba(0, 240, 255, 0.08), 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: 5px 5px 0px 0px black;
   position: relative;
   overflow: hidden;
 }
 
-.auth-box::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--purple), var(--cyan), var(--orange));
-}
 
 .auth-sub {
   text-align: center;
@@ -581,7 +1089,7 @@ body {
 
 .auth-tabs {
   display: flex;
-  background: var(--bg2);
+  background: transparent;
   border-radius: var(--radius-sm);
   padding: 4px;
   margin-bottom: 1.75rem;
@@ -593,20 +1101,21 @@ body {
   background: none;
   border: none;
   color: var(--text2);
-  font-family: 'Rajdhani', sans-serif;
+  font-family: 'Inter Tight', sans-serif;
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 10px;
   transition: all 0.2s;
 }
 
 .auth-tab.active {
-  background: var(--cyan-dim);
-  color: var(--cyan);
-  border: 1px solid rgba(0, 240, 255, 0.2);
+  background: #B3E5FC;
+  color: #0277BD;
+  border: 2px solid black;
+  box-shadow: 3px 3px 0px 0px black;
 }
 
 /* FORM ELEMENTS */
@@ -816,6 +1325,8 @@ body {
 .catalog-container {
   padding-left: 3rem;
   padding-right: 3rem;
+  height: calc(100vh - 3rem);
+  overflow-y: auto;
 }
 
 /* GAME CARDS GRID */

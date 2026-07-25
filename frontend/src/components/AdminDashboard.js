@@ -1,49 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
-
-const API = 'http://localhost:5000/api';
+import React from 'react';
+import { TrendingUp, Users, Package, ShoppingCart, Star, AlertCircle, BarChart3 } from 'lucide-react';
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalGames: 0,
-    activeRentals: 0,
-    totalRevenue: 0,
-    totalRentals: 0,
-    totalPurchases: 0,
-    availableDigital: 0,
-    availablePhysical: 0,
-    overdueRentals: 0,
-    recentTransactions: []
-  });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  const loadStats = useCallback(async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('gamevault_token');
-      const res = await fetch(`${API}/dashboard/stats`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to load dashboard stats');
-      }
-      setStats(data);
-      setError('');
-    } catch (error) {
-      console.error('Error loading dashboard stats:', error);
-      setError(error.message || 'Failed to load dashboard stats');
-    }
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    loadStats();
-  }, [loadStats]);
-
   const formatCurrency = (amount) => {
     return `$${Math.round(parseFloat(amount)).toLocaleString()}`;
   };
@@ -52,182 +10,195 @@ export default function AdminDashboard() {
     return Math.round(parseInt(number)).toLocaleString();
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '—';
-    return new Date(dateString).toLocaleDateString();
+  // Placeholder data
+  const stats = {
+    totalUsers: 15420,
+    totalGames: 875,
+    activeRentals: 342,
+    totalRevenue: 125000,
+    totalRentals: 2340,
+    totalPurchases: 890,
+    availableDigital: 450,
+    availablePhysical: 425,
+    overdueRentals: 12
   };
 
-  if (loading) {
-    return (
-      <div>
-        <div className="page-header">
-          <div>
-            <div className="page-title">ADMIN DASHBOARD</div>
-            <div className="page-sub">System management</div>
-          </div>
-        </div>
-        <div className="loading"><div className="spinner" /> Loading dashboard...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div>
-        <div className="page-header">
-          <div>
-            <div className="page-title">ADMIN DASHBOARD</div>
-            <div className="page-sub">System management</div>
-          </div>
-        </div>
-        <div className="alert alert-error">{error}</div>
-      </div>
-    );
-  }
-
   return (
-    <div>
-      <div className="page-header">
-        <div>
-          <div className="page-title">ADMIN DASHBOARD</div>
-          <div className="page-sub">System overview and metrics</div>
-        </div>
-        <button className="btn btn-cyan" onClick={loadStats}>
-          🔄 Refresh
-        </button>
-      </div>
-
-      <div className="dashboard-grid">
-        <div className="stat-card" style={{ 
-          background: 'linear-gradient(135deg, rgba(0,240,255,0.1), rgba(157,78,221,0.1))',
-          border: '1px solid var(--cyan)'
-        }}>
-          <div className="stat-icon" style={{ 
-            background: 'linear-gradient(135deg, var(--cyan), var(--purple))',
-            boxShadow: 'var(--cyan-glow)'
-          }}>👥</div>
-          <div className="stat-info">
-            <div className="stat-val" style={{ color: 'var(--cyan)' }}>{formatNumber(stats.totalUsers)}</div>
-            <div className="stat-label">Total Users</div>
-          </div>
-        </div>
-
-        <div className="stat-card" style={{ 
-          background: 'linear-gradient(135deg, rgba(0,255,136,0.1), rgba(0,240,255,0.1))',
-          border: '1px solid var(--green)'
-        }}>
-          <div className="stat-icon" style={{ 
-            background: 'linear-gradient(135deg, var(--green), var(--cyan))',
-            boxShadow: '0 0 20px rgba(0,255,136,0.4)'
-          }}>🎮</div>
-          <div className="stat-info">
-            <div className="stat-val" style={{ color: 'var(--green)' }}>{formatNumber(stats.totalGames)}</div>
-            <div className="stat-label">Games</div>
-          </div>
-        </div>
-
-        <div className="stat-card" style={{ 
-          background: 'linear-gradient(135deg, rgba(255,107,0,0.1), rgba(0,255,136,0.1))',
-          border: '1px solid var(--orange)'
-        }}>
-          <div className="stat-icon" style={{ 
-            background: 'linear-gradient(135deg, var(--orange), var(--green))',
-            boxShadow: 'var(--orange-glow)'
-          }}>📋</div>
-          <div className="stat-info">
-            <div className="stat-val" style={{ color: 'var(--orange)' }}>{formatNumber(stats.activeRentals)}</div>
-            <div className="stat-label">Active Rentals</div>
-          </div>
-        </div>
-
-        <div className="stat-card" style={{ 
-          background: 'linear-gradient(135deg, rgba(220,53,69,0.1), rgba(255,107,0,0.1))',
-          border: '1px solid #DC3545'
-        }}>
-          <div className="stat-icon" style={{ 
-            background: 'linear-gradient(135deg, #DC3545, var(--orange))',
-            boxShadow: '0 0 20px rgba(220,53,69,0.4)'
-          }}>💰</div>
-          <div className="stat-info">
-            <div className="stat-val" style={{ color: '#DC3545' }}>{formatCurrency(stats.totalRevenue)}</div>
-            <div className="stat-label">Total Revenue</div>
-          </div>
-        </div>
-
-        <div className="stat-card" style={{ 
-          background: 'linear-gradient(135deg, rgba(157,78,221,0.1), rgba(0,240,255,0.1))',
-          border: '1px solid var(--purple)'
-        }}>
-          <div className="stat-icon" style={{ 
-            background: 'linear-gradient(135deg, var(--purple), var(--cyan))',
-            boxShadow: '0 0 20px rgba(157,78,221,0.4)'
-          }}>📦</div>
-          <div className="stat-info">
-            <div className="stat-val" style={{ color: 'var(--purple)' }}>{formatNumber(stats.totalRentals)}</div>
-            <div className="stat-label">Total Rentals</div>
-          </div>
-        </div>
-
-        <div className="stat-card" style={{ 
-          background: 'linear-gradient(135deg, rgba(0,240,255,0.1), rgba(255,107,0,0.1))',
-          border: '1px solid var(--cyan)'
-        }}>
-          <div className="stat-icon" style={{ 
-            background: 'linear-gradient(135deg, var(--cyan), var(--orange))',
-            boxShadow: 'var(--cyan-glow)'
-          }}>🛒</div>
-          <div className="stat-info">
-            <div className="stat-val" style={{ color: 'var(--cyan)' }}>{formatNumber(stats.totalPurchases)}</div>
-            <div className="stat-label">Total Purchases</div>
-          </div>
-        </div>
-
-        <div className="stat-card" style={{ 
-          background: 'linear-gradient(135deg, rgba(0,255,136,0.1), rgba(157,78,221,0.1))',
-          border: '1px solid var(--green)'
-        }}>
-          <div className="stat-icon" style={{ 
-            background: 'linear-gradient(135deg, var(--green), var(--purple))',
-            boxShadow: '0 0 20px rgba(0,255,136,0.4)'
-          }}>💿</div>
-          <div className="stat-info">
-            <div className="stat-val" style={{ color: 'var(--green)' }}>{formatNumber(stats.availableDigital)}</div>
-            <div className="stat-label">Digital Copies</div>
-          </div>
-        </div>
-
-        <div className="stat-card" style={{ 
-          background: 'linear-gradient(135deg, rgba(255,107,0,0.1), rgba(220,53,69,0.1))',
-          border: '1px solid var(--orange)'
-        }}>
-          <div className="stat-icon" style={{ 
-            background: 'linear-gradient(135deg, var(--orange), #DC3545)',
-            boxShadow: 'var(--orange-glow)'
-          }}>📀</div>
-          <div className="stat-info">
-            <div className="stat-val" style={{ color: 'var(--orange)' }}>{formatNumber(stats.availablePhysical)}</div>
-            <div className="stat-label">Physical Copies</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="dashboard-sections">
-        <div className="dashboard-section">
-          <div className="section-header">
-            <div className="section-title"> Overdue Rentals</div>
-            <div className="section-count" style={{ color: '#DC3545' }}>{formatNumber(stats.overdueRentals)}</div>
-          </div>
-          <div className="section-content" style={{ 
-            background: 'rgba(220,53,69,0.1)',
-            border: '1px solid rgba(220,53,69,0.3)',
-            borderRadius: 'var(--radius)',
-            padding: '20px',
-            textAlign: 'center'
-          }}>
-            <div style={{ fontSize: '48px', fontWeight: 'bold', color: '#DC3545', marginBottom: '10px' }}>
-              {formatNumber(stats.overdueRentals)}
+    <div className="catalog-container" style={{ fontFamily: "'Inter Tight', sans-serif" }}>
+      <div className="admin-dashboard-layout">
+        {/* Left Sidebar - Revenue and Stats */}
+        <div className="admin-left-sidebar">
+          {/* Revenue Hero Card */}
+          <div className="admin-revenue-hero">
+            <div className="revenue-header">
+              <div className="revenue-content">
+                <div className="revenue-label">Total Revenue Generated</div>
+                <div className="revenue-amount">{formatCurrency(stats.totalRevenue)}</div>
+                <div className="revenue-trend">
+                  <TrendingUp size={20} />
+                  <span>+12.5% from last month</span>
+                </div>
+              </div>
+              <div className="revenue-icon">
+                <ShoppingCart size={48} />
+              </div>
             </div>
-            <div style={{ color: 'var(--text2)' }}>Rentals past due date</div>
+
+            {/* Popular Genres */}
+            <div className="admin-genre-card">
+              <div className="admin-card-header">
+                <div className="admin-card-title">Top Popular Genres</div>
+                <Star size={16} className="text-yellow-500" />
+              </div>
+              <div className="admin-genre-content">
+                <div className="genres-list">
+                  <div className="genre-item">
+                    <div className="genre-badge genre-action">Action</div>
+                    <div className="genre-stats">
+                      <div className="genre-stat">
+                        <span className="genre-stat-value">45%</span>
+                        <span className="genre-stat-label">rentals</span>
+                      </div>
+                      <div className="genre-stat">
+                        <span className="genre-stat-value">2,340</span>
+                        <span className="genre-stat-label">games</span>
+                      </div>
+                    </div>
+                    <div className="genre-progress">
+                      <div className="genre-progress-bar" style={{ width: '45%' }}></div>
+                    </div>
+                  </div>
+                  <div className="genre-item">
+                    <div className="genre-badge genre-rpg">RPG</div>
+                    <div className="genre-stats">
+                      <div className="genre-stat">
+                        <span className="genre-stat-value">28%</span>
+                        <span className="genre-stat-label">rentals</span>
+                      </div>
+                      <div className="genre-stat">
+                        <span className="genre-stat-value">1,456</span>
+                        <span className="genre-stat-label">games</span>
+                      </div>
+                    </div>
+                    <div className="genre-progress">
+                      <div className="genre-progress-bar" style={{ width: '28%' }}></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Stats Grid inside Revenue Card */}
+            <div className="admin-stats-grid">
+              <div className="admin-stat-card">
+                <div className="admin-stat-icon icon-purple">
+                  <Users size={20} />
+                </div>
+                <div className="admin-stat-content">
+                  <div className="admin-stat-value">{formatNumber(stats.totalUsers)}</div>
+                  <div className="admin-stat-label">User Traffic</div>
+                </div>
+              </div>
+
+              <div className="admin-stat-card">
+                <div className="admin-stat-icon icon-green">
+                  <Package size={20} />
+                </div>
+                <div className="admin-stat-content">
+                  <div className="admin-stat-value">{formatNumber(stats.availablePhysical)}</div>
+                  <div className="admin-stat-label">Physical Orders Dispatched</div>
+                </div>
+              </div>
+
+              <div className="admin-stat-card">
+                <div className="admin-stat-icon icon-orange">
+                  <ShoppingCart size={20} />
+                </div>
+                <div className="admin-stat-content">
+                  <div className="admin-stat-value">{formatNumber(stats.activeRentals)}</div>
+                  <div className="admin-stat-label">Active Rentals</div>
+                </div>
+              </div>
+
+              <div className="admin-stat-card">
+                <div className="admin-stat-icon icon-cyan">
+                  <BarChart3 size={20} />
+                </div>
+                <div className="admin-stat-content">
+                  <div className="admin-stat-value">{formatNumber(stats.totalRentals)}</div>
+                  <div className="admin-stat-label">Total Rentals</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Content - Reviews, Complaints */}
+        <div className="admin-right-content">
+          {/* Reviews */}
+          <div className="admin-reviews-card">
+            <div className="admin-card-header">
+              <div className="admin-card-title">Recent Reviews</div>
+              <div className="admin-card-badge">Latest</div>
+            </div>
+            <div className="admin-reviews-list">
+              <div className="admin-review-item">
+                <div className="review-avatar">JD</div>
+                <div className="review-content">
+                  <div className="review-header">
+                    <span className="review-author">John Doe</span>
+                    <div className="review-rating">
+                      <Star size={12} fill="#fbbf24" color="#fbbf24" />
+                      <Star size={12} fill="#fbbf24" color="#fbbf24" />
+                      <Star size={12} fill="#fbbf24" color="#fbbf24" />
+                      <Star size={12} fill="#fbbf24" color="#fbbf24" />
+                      <Star size={12} fill="#fbbf24" color="#fbbf24" />
+                    </div>
+                  </div>
+                  <div className="review-text">Amazing service! Got my game delivered within 24 hours.</div>
+                </div>
+              </div>
+              <div className="admin-review-item">
+                <div className="review-avatar">SM</div>
+                <div className="review-content">
+                  <div className="review-header">
+                    <span className="review-author">Sarah Miller</span>
+                    <div className="review-rating">
+                      <Star size={12} fill="#fbbf24" color="#fbbf24" />
+                      <Star size={12} fill="#fbbf24" color="#fbbf24" />
+                      <Star size={12} fill="#fbbf24" color="#fbbf24" />
+                      <Star size={12} fill="#fbbf24" color="#fbbf24" />
+                      <Star size={12} color="#d1d5db" />
+                    </div>
+                  </div>
+                  <div className="review-text">Great selection of games, will definitely rent again!</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Complaints */}
+          <div className="admin-complaints-card">
+            <div className="admin-card-header">
+              <div className="admin-card-title">Complaints</div>
+              <AlertCircle size={18} className="text-red-500" />
+            </div>
+            <div className="admin-complaints-list">
+              <div className="admin-complaint-item">
+                <div className="complaint-badge complaint-high">High</div>
+                <div className="complaint-content">
+                  <div className="complaint-title">Late delivery - Order #1234</div>
+                  <div className="complaint-time">2 hours ago</div>
+                </div>
+              </div>
+              <div className="admin-complaint-item">
+                <div className="complaint-badge complaint-medium">Medium</div>
+                <div className="complaint-content">
+                  <div className="complaint-title">Damaged disc reported</div>
+                  <div className="complaint-time">5 hours ago</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
