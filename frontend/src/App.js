@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Gamepad2, ShoppingCart, Star, FlaskConical, Clock, History, Calendar, LayoutDashboard, Users, Package, Receipt, CreditCard, UserCheck, ListTodo, Bell, Phone, MessageCircle, ShoppingCart as Cart } from 'lucide-react';
-import Waves from './component/Waves';
 import GameList from './components/GameList';
 import RentGame from './components/RentGame';
 import ReviewGame from './components/ReviewGame';
-import Test from './components/test';
 import AdminDashboard from './components/AdminDashboard';
 import AdminUsers from './components/AdminUsers';
 import AdminGames from './components/AdminGames';
@@ -136,7 +134,6 @@ export default function App() {
     { id: 'rent', label: 'Rent', icon: ShoppingCart },
     { id: 'purchase', label: 'Purchase', icon: ShoppingCart },
     { id: 'review', label: 'Reviews', icon: Star },
-    { id: 'test', label: 'Test', icon: FlaskConical },
     { id: 'digital-waitlist', label: 'Digital Waitlist', icon: Clock },
     { id: 'physical-waitlist', label: 'Physical Waitlist', icon: Clock },
     { id: 'purchase-history', label: 'Purchase History', icon: History },
@@ -374,7 +371,6 @@ export default function App() {
         {page === 'games' && <GameList user={user} setSelectedGame={(game) => { setSelectedGame(game); setPage('rent'); }} />}
         {page === 'rent' && <RentGame user={user} selectedGame={selectedGame} />}
         {page === 'review' && <ReviewGame user={user} />}
-        {page === 'test' && <Test />}
         {user?.isAdmin && page === 'admin' && <AdminDashboard />}
         {user?.isAdmin && page === 'admin-users' && <AdminUsers />}
         {user?.isAdmin && page === 'admin-games' && <AdminGames />}
